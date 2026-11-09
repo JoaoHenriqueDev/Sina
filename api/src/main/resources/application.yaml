@@ -1,6 +1,29 @@
 spring:
-  application:
-    name: api
-
   config:
     import: "optional:file:.env[.properties]"
+  application:
+    name: sina-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_POSTGRES}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:}
+
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from: ${MAIL_FROM:alerta@sina.ia.br}
+
+firebase:
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
+
+sina:
+  device-token-pepper: ${DEVICE_TOKEN_PEPPER:}
