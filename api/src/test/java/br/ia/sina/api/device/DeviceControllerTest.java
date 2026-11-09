@@ -1,5 +1,6 @@
 package br.ia.sina.api.device;
 
+import br.ia.sina.api.device.repository.DeviceRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

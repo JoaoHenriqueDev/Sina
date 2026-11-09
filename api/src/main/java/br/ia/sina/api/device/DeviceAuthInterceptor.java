@@ -2,6 +2,10 @@ package br.ia.sina.api.device;
 
 import br.ia.sina.api.common.ApiException;
 import br.ia.sina.api.common.ErrorCode;
+import br.ia.sina.api.device.model.Device;
+import br.ia.sina.api.device.repository.DeviceRepository;
+import br.ia.sina.api.device.role.RequiresRole;
+import br.ia.sina.api.device.service.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.AnnotatedElementUtils;

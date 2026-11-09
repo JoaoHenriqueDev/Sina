@@ -1,5 +1,6 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.model;
 
+import br.ia.sina.api.device.role.DeviceRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,9 +1,14 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.controller;
 
-import br.ia.sina.api.device.DeviceDtos.FcmTokenRequest;
-import br.ia.sina.api.device.DeviceDtos.HeartbeatRequest;
-import br.ia.sina.api.device.DeviceDtos.RegisterRequest;
-import br.ia.sina.api.device.DeviceDtos.RegisterResponse;
+import br.ia.sina.api.device.CurrentDevice;
+import br.ia.sina.api.device.model.Device;
+import br.ia.sina.api.device.dto.DeviceDtos.FcmTokenRequest;
+import br.ia.sina.api.device.dto.DeviceDtos.HeartbeatRequest;
+import br.ia.sina.api.device.dto.DeviceDtos.RegisterRequest;
+import br.ia.sina.api.device.dto.DeviceDtos.RegisterResponse;
+import br.ia.sina.api.device.role.DeviceRole;
+import br.ia.sina.api.device.role.RequiresRole;
+import br.ia.sina.api.device.service.DeviceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;

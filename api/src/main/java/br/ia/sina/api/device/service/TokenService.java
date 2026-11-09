@@ -1,4 +1,4 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.service;
 
 import br.ia.sina.api.config.SinaProperties;
 import org.springframework.stereotype.Service;

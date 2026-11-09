@@ -1,6 +1,7 @@
 package br.ia.sina.api.device;
 
 import br.ia.sina.api.config.SinaProperties;
+import br.ia.sina.api.device.service.TokenService;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

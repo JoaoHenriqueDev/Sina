@@ -1,9 +1,12 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.service;
 
 import br.ia.sina.api.common.ApiException;
 import br.ia.sina.api.common.ErrorCode;
-import br.ia.sina.api.device.DeviceDtos.RegisterRequest;
-import br.ia.sina.api.device.DeviceDtos.RegisterResponse;
+import br.ia.sina.api.device.model.Device;
+import br.ia.sina.api.device.dto.DeviceDtos.RegisterRequest;
+import br.ia.sina.api.device.dto.DeviceDtos.RegisterResponse;
+import br.ia.sina.api.device.role.DeviceRole;
+import br.ia.sina.api.device.repository.DeviceRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

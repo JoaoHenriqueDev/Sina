@@ -1,4 +1,4 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.role;
 
 public enum DeviceRole {
     PROTECTED,

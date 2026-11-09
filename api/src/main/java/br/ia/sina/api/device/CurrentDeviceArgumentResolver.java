@@ -1,5 +1,6 @@
 package br.ia.sina.api.device;
 
+import br.ia.sina.api.device.model.Device;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;

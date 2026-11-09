@@ -3,8 +3,13 @@ package br.ia.sina.api.device;
 import br.ia.sina.api.common.ApiException;
 import br.ia.sina.api.common.ErrorCode;
 import br.ia.sina.api.config.SinaProperties;
-import br.ia.sina.api.device.DeviceDtos.RegisterRequest;
-import br.ia.sina.api.device.DeviceDtos.RegisterResponse;
+import br.ia.sina.api.device.dto.DeviceDtos.RegisterRequest;
+import br.ia.sina.api.device.dto.DeviceDtos.RegisterResponse;
+import br.ia.sina.api.device.model.Device;
+import br.ia.sina.api.device.repository.DeviceRepository;
+import br.ia.sina.api.device.role.DeviceRole;
+import br.ia.sina.api.device.service.DeviceService;
+import br.ia.sina.api.device.service.TokenService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

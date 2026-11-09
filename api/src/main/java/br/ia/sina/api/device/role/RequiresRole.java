@@ -1,4 +1,4 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.role;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

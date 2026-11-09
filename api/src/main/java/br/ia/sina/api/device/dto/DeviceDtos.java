@@ -1,5 +1,6 @@
-package br.ia.sina.api.device;
+package br.ia.sina.api.device.dto;
 
+import br.ia.sina.api.device.role.DeviceRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
