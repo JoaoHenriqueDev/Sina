@@ -9,7 +9,9 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_URL: jdbc:postgresql://postgres:5432/${DB_POSTGRES}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_POSTGRES}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
     depends_on:
       postgres:
