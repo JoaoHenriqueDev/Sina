@@ -1,0 +1,66 @@
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+keystore.properties
+local.properties
+google-services.json
+firebase-adminsdk*.json
+service-account*.json
+
+# Java / Maven / Gradle
+target/
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+*.log
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# Spring Boot
+application-local.properties
+application-local.yml
+application-secret*.properties
+application-secret*.yml
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+bin/
+gen/
+out/
+captures/
+.externalNativeBuild/
+.cxx/
+.navigation/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+nbproject/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Outros
+*.swp
+*~
+node_modules/
