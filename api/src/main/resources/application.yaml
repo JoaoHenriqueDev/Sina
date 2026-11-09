@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: api
+
+  config:
+    import: "optional:file:.env[.properties]"
