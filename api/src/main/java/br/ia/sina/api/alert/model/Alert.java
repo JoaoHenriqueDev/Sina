@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity
@@ -47,7 +48,7 @@ public class Alert {
     private String familySummary;
 
     @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
     public Alert(UUID protectedId, Source source, Verdict verdict, String scamType, double confidence, String familySummary) {
         this.protectedId = protectedId;

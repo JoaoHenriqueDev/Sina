@@ -45,6 +45,8 @@ public class Device {
 
     private Instant lastSeenAt;
 
+    private Instant inactiveNotifiedAt;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

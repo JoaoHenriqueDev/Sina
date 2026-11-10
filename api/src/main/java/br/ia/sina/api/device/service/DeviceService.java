@@ -46,6 +46,7 @@ public class DeviceService {
             return;
         }
         device.setLastSeenAt(Instant.now());
+        device.setInactiveNotifiedAt(null);
         repository.save(device);
     }
 }
