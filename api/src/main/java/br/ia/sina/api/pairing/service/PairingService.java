@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class PairingService {
 
     static final Duration CODE_TTL = Duration.ofMinutes(10);
-    static final Duration INACTIVE_AFTER = Duration.ofMinutes(30);
+    public static final Duration INACTIVE_AFTER = Duration.ofMinutes(30);
     private static final int MAX_CODE_ATTEMPTS = 20;
 
     private final SecureRandom random = new SecureRandom();
