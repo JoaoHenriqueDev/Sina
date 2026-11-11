@@ -15,6 +15,8 @@ public interface AlertDeliveryRepository extends JpaRepository<AlertDelivery, UU
 
     List<AlertDelivery> findByAlertIdOrderByCreatedAt(UUID alertId);
 
+    boolean existsByAlertId(UUID alertId);
+
     @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update AlertDelivery d set d.status = :status where d.id = :id")

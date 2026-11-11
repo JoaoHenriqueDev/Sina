@@ -89,12 +89,27 @@ class AnalysisControllerTest {
                 "{\"source\":\"SMS\",\"text\":\"oi\",\"localSignals\":[\"XYZ\"],\"receivedAt\":\"2026-11-10T12:00:00Z\"}",
                 "{\"source\":\"EMAIL\",\"text\":\"oi\",\"receivedAt\":\"2026-11-10T12:00:00Z\"}",
                 "{\"source\":\"SMS\",\"text\":\" \",\"receivedAt\":\"2026-11-10T12:00:00Z\"}",
+                "{\"source\":\"SMS\",\"text\":\"oi\",\"receivedAt\":\"2026-11-10T12:00:00Z\",\"messageCount\":0}",
+                "{\"source\":\"SMS\",\"text\":\"oi\",\"receivedAt\":\"2026-11-10T12:00:00Z\",\"messageCount\":51}",
                 "{\"source\":\"SMS\",\"text\":\"oi\"}"}) {
             mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + token)
                             .contentType(MediaType.APPLICATION_JSON).content(json))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
         }
+    }
+
+    @Test
+    void aceitaVariasMensagensComMessageCount() throws Exception {
+        when(openAi.classify(any(), anyString(), anyList()))
+                .thenReturn(new LlmVerdict(Verdict.SAFE, ScamType.NONE, 0.9, "Mensagem sem perigo.", "Conversa comum."));
+        String token = JsonPath.read(register("PROTECTED"), "$.deviceToken");
+        mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"source\":\"WHATSAPP\",\"text\":\"Oi\\nTudo bem?\\nMe liga depois\",\"messageCount\":3,\"receivedAt\":\"2026-11-10T12:00:00Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.verdict").value("SAFE"));
+        verify(openAi).classify(any(), org.mockito.ArgumentMatchers.eq("Oi\nTudo bem?\nMe liga depois"), anyList());
     }
 
     @Test

@@ -26,6 +26,12 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
             where d.id = :id and d.inactiveNotifiedAt is null and d.lastSeenAt < :limit""")
     int markInactiveNotified(@Param("id") UUID id, @Param("limit") Instant limit, @Param("now") Instant now);
 
+    /** Desfaz a marca quando o aviso falhou, para o próximo ciclo tentar de novo. */
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Device d set d.inactiveNotifiedAt = null where d.id = :id and d.inactiveNotifiedAt = :at")
+    int unmarkInactiveNotified(@Param("id") UUID id, @Param("at") Instant at);
+
     @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Device d set d.fcmToken = null where d.id = :id and d.fcmToken = :token")

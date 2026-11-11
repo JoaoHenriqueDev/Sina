@@ -4,6 +4,7 @@ import br.ia.sina.api.device.model.Device;
 import br.ia.sina.api.device.repository.DeviceRepository;
 import br.ia.sina.api.notification.GuardianNotifier;
 import br.ia.sina.api.notification.ScamNotification;
+import br.ia.sina.api.notification.email.EmailContent;
 import br.ia.sina.api.notification.email.EmailSender;
 import br.ia.sina.api.notification.model.AlertDelivery;
 import br.ia.sina.api.notification.model.DeliveryChannel;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -42,10 +45,10 @@ public class FcmResendGuardianNotifier implements GuardianNotifier {
     }
 
     @Override
-    public boolean notifyScam(ScamNotification n) {
+    public Optional<Runnable> prepareScam(ScamNotification n) {
         List<Channel> channels = channelsOf(n.protectedId());
         if (channels.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
         List<DeliveryTarget> targets = new ArrayList<>();
         for (Channel c : channels) {
@@ -54,8 +57,14 @@ public class FcmResendGuardianNotifier implements GuardianNotifier {
                     "alert-" + delivery.getId()));
         }
         String name = protectedName(n.protectedId());
-        dispatcher.dispatch(targets, NotificationMessages.scamPush(n, name), NotificationMessages.scamEmail(n, name));
-        return true;
+        Map<String, String> pushData = NotificationMessages.scamPush(n, name);
+        EmailContent emailContent = NotificationMessages.scamEmail(n, name);
+        return Optional.of(() -> dispatcher.dispatch(targets, pushData, emailContent));
+    }
+
+    @Override
+    public boolean alreadyNotified(UUID alertId) {
+        return deliveryRepository.existsByAlertId(alertId);
     }
 
     @Override

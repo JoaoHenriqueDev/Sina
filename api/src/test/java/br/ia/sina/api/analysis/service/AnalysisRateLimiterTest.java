@@ -34,4 +34,22 @@ class AnalysisRateLimiterTest {
         when(clock.instant()).thenReturn(start.plus(AnalysisRateLimiter.WINDOW));
         limiter.acquire(id);
     }
+
+    @Test
+    void limpezaRemoveSoJanelasVencidas() {
+        Clock clock = mock(Clock.class);
+        Instant start = Instant.parse("2026-11-10T12:00:00Z");
+        when(clock.instant()).thenReturn(start);
+        AnalysisRateLimiter limiter = new AnalysisRateLimiter(clock);
+        limiter.acquire(UUID.randomUUID());
+
+        when(clock.instant()).thenReturn(start.plusSeconds(30));
+        limiter.acquire(UUID.randomUUID());
+        limiter.evictExpired();
+        assertThat(limiter.size()).isEqualTo(2);
+
+        when(clock.instant()).thenReturn(start.plus(AnalysisRateLimiter.WINDOW));
+        limiter.evictExpired();
+        assertThat(limiter.size()).isEqualTo(1);
+    }
 }
