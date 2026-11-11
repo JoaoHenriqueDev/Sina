@@ -47,15 +47,20 @@ public class Alert {
     @Column(nullable = false, updatable = false, length = 500)
     private String familySummary;
 
+    @Column(updatable = false, length = 64)
+    private String textHash;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-    public Alert(UUID protectedId, Source source, Verdict verdict, String scamType, double confidence, String familySummary) {
+    public Alert(UUID protectedId, Source source, Verdict verdict, String scamType, double confidence, String familySummary,
+                 String textHash) {
         this.protectedId = protectedId;
         this.source = source;
         this.verdict = verdict;
         this.scamType = scamType;
         this.confidence = confidence;
         this.familySummary = familySummary;
+        this.textHash = textHash;
     }
 }

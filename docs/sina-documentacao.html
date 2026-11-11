@@ -429,7 +429,7 @@ erDiagram
   <li>O banco nunca guarda o texto: só veredito, categoria, confiança, resumo e o hash usado no cache.</li>
   <li>Em caso de golpe, o familiar recebe a categoria, o resumo e um trecho de até 300 caracteres do texto já anonimizado. O trecho passa pela API só para o envio e não é gravado.</li>
   <li>Nada de venda ou compartilhamento de dados com terceiros.</li>
-  <li>Consentimento claro do idoso antes de ativar a leitura, informando que o texto anonimizado é analisado por um serviço de IA (OpenAI) e que o familiar pareado vê um trecho das mensagens de golpe.</li>
+  <li>Consentimento claro do idoso antes de ativar a leitura, informando que o texto anonimizado é analisado por um serviço de IA (OpenAI) e que, em caso de golpe, um trecho anonimizado é enviado ao familiar pareado por push (Firebase Cloud Messaging, do Google) e por e-mail (Resend).</li>
   <li>A política de privacidade e o formulário Data safety da Play precisam citar a OpenAI (análise), o Firebase (push) e o Resend (e-mail) como terceiros que processam dados.</li>
 </ul>
 <p><strong>Distribuição</strong></p>

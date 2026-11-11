@@ -34,6 +34,7 @@ public class AnalysisService {
 
     public static final double NOTIFY_THRESHOLD = 0.8;
     public static final Duration CACHE_TTL = Duration.ofDays(7);
+    public static final Duration DUPLICATE_WINDOW = Duration.ofHours(6);
 
     private static final Logger log = LoggerFactory.getLogger(AnalysisService.class);
 
@@ -74,10 +75,18 @@ public class AnalysisService {
         if (v.verdict() == Verdict.SAFE) {
             return new AnalyzeResponse(v.verdict(), scamType, v.confidence(), v.elderlyMessage(), result.engine(), null, false);
         }
+        boolean shouldNotify = v.verdict() == Verdict.SCAM && v.confidence() >= NOTIFY_THRESHOLD;
+        Optional<Alert> duplicate = alertRepository
+                .findFirstByProtectedIdAndTextHashAndCreatedAtAfterOrderByCreatedAtDesc(
+                        device.getId(), hash, Instant.now().minus(DUPLICATE_WINDOW))
+                .filter(a -> a.getVerdict() == v.verdict() && (!shouldNotify || a.getConfidence() >= NOTIFY_THRESHOLD));
+        if (duplicate.isPresent()) {
+            return new AnalyzeResponse(v.verdict(), scamType, v.confidence(), v.elderlyMessage(), result.engine(),
+                    duplicate.get().getId(), false);
+        }
         Alert alert = alertRepository.save(new Alert(device.getId(), request.source(), v.verdict(), scamType,
-                v.confidence(), v.familySummary()));
-        boolean notified = v.verdict() == Verdict.SCAM && v.confidence() >= NOTIFY_THRESHOLD
-                && notifier.notifyScam(ScamNotification.of(alert, request.text()));
+                v.confidence(), v.familySummary(), hash));
+        boolean notified = shouldNotify && notifier.notifyScam(ScamNotification.of(alert, request.text()));
         return new AnalyzeResponse(v.verdict(), scamType, v.confidence(), v.elderlyMessage(), result.engine(), alert.getId(), notified);
     }
 

@@ -62,10 +62,15 @@ class AnalysisControllerTest {
                 .andExpect(jsonPath("$.engine").value("LLM"))
                 .andExpect(jsonPath("$.alertId").isNotEmpty())
                 .andExpect(jsonPath("$.guardianNotified").value(false));
-        analyze(token, text).andExpect(status().isOk()).andExpect(jsonPath("$.engine").value("CACHE"));
+        String first = analyze(token, text).andReturn().getResponse().getContentAsString();
+        String second = analyze(token, text).andExpect(status().isOk())
+                .andExpect(jsonPath("$.engine").value("CACHE"))
+                .andExpect(jsonPath("$.guardianNotified").value(false))
+                .andReturn().getResponse().getContentAsString();
 
         verify(openAi, times(1)).classify(any(), anyString(), anyList());
-        assertThat(alertRepository.findAll()).filteredOn(a -> a.getProtectedId().equals(deviceId)).hasSize(2);
+        assertThat(alertRepository.findAll()).filteredOn(a -> a.getProtectedId().equals(deviceId)).hasSize(1);
+        assertThat((String) JsonPath.read(second, "$.alertId")).isEqualTo(JsonPath.read(first, "$.alertId"));
         assertThat(cacheRepository.findAll()).allSatisfy(c -> assertThat(c.getResponseJson()).doesNotContain(text));
     }
 
