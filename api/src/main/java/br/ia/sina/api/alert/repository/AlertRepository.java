@@ -16,6 +16,13 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
     Optional<Alert> findFirstByProtectedIdAndTextHashAndCreatedAtAfterOrderByCreatedAtDesc(
             UUID protectedId, String textHash, Instant after);
 
+    /**
+     * Serializa, até o fim da transação atual, as análises com a mesma chave (idoso + texto),
+     * para que requisições simultâneas não gravem nem notifiquem o mesmo alerta duas vezes.
+     */
+    @Query(value = "SELECT 1 FROM pg_advisory_xact_lock(:key)", nativeQuery = true)
+    Integer lockAnalysis(@Param("key") long key);
+
     @Query(value = """
             SELECT * FROM alert
             WHERE protected_id IN (:protectedIds)
