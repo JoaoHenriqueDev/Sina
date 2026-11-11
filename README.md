@@ -101,7 +101,7 @@ No Android 13+, se o APK for instalado fora da Play Store, libere "Permitir conf
 - O texto da mensagem é anonimizado no aparelho antes de sair dele.
 - A OpenAI recebe só o texto anonimizado, sem armazenamento (`store: false`).
 - O banco guarda vínculos e alertas, nunca o texto da mensagem. O cache usa só o hash do texto anonimizado e expira em 7 dias.
-- Em caso de golpe, o familiar recebe a categoria, um resumo e um trecho de até 300 caracteres do texto já anonimizado. O trecho é enviado, mas não é gravado.
+- Em caso de golpe, o familiar recebe a categoria, um resumo e um trecho de até 300 caracteres do texto já anonimizado. O trecho é enviado pelo Firebase Cloud Messaging (push) e pelo Resend (e-mail), mas não é gravado no banco. O consentimento do idoso cita a OpenAI, o Firebase e o Resend.
 - As demos usam apenas mensagens sintéticas.
 
 ## Limitações

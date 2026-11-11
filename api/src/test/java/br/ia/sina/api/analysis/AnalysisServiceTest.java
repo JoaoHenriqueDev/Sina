@@ -167,6 +167,35 @@ class AnalysisServiceTest {
         verify(alertRepository, never()).save(any());
     }
 
+    @Test
+    void mesmaMensagemRecenteReaproveitaOAlertaSemNotificar() {
+        llmReturns(Verdict.SCAM, ScamType.FALSE_RELATIVE, 0.93);
+        Alert existing = new Alert(device.getId(), Source.WHATSAPP, Verdict.SCAM, "FALSE_RELATIVE", 0.93, "Resumo", "h");
+        when(alertRepository.findFirstByProtectedIdAndTextHashAndCreatedAtAfterOrderByCreatedAtDesc(any(), anyString(), any()))
+                .thenReturn(Optional.of(existing));
+
+        AnalyzeResponse response = service.analyze(device, request(List.of()));
+
+        assertThat(response.guardianNotified()).isFalse();
+        assertThat(response.alertId()).isEqualTo(existing.getId());
+        verify(alertRepository, never()).save(any());
+        verify(notifier, never()).notifyScam(any());
+    }
+
+    @Test
+    void vereditoQuePioraGeraNovoAlertaENotifica() {
+        llmReturns(Verdict.SCAM, ScamType.FALSE_RELATIVE, 0.93);
+        Alert suspicious = new Alert(device.getId(), Source.WHATSAPP, Verdict.SUSPICIOUS, "OTHER", 0.6, "Resumo", "h");
+        when(alertRepository.findFirstByProtectedIdAndTextHashAndCreatedAtAfterOrderByCreatedAtDesc(any(), anyString(), any()))
+                .thenReturn(Optional.of(suspicious));
+
+        AnalyzeResponse response = service.analyze(device, request(List.of()));
+
+        assertThat(response.guardianNotified()).isTrue();
+        verify(alertRepository).save(any());
+        verify(notifier).notifyScam(any());
+    }
+
     private void llmReturns(Verdict verdict, ScamType type, double confidence) {
         when(openAi.classify(any(), anyString(), anyList()))
                 .thenReturn(new LlmVerdict(verdict, type, confidence, "Mensagem ao idoso", "Resumo ao familiar"));

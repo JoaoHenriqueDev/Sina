@@ -41,7 +41,8 @@ public class PushSender {
     }
 
     public boolean enabled() {
-        return properties.credentialsPath() != null && !properties.credentialsPath().isBlank();
+        String path = properties.credentialsPath();
+        return path != null && !path.isBlank() && Files.isReadable(Path.of(path));
     }
 
     public PushResult send(String token, Map<String, String> data) {

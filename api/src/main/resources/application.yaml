@@ -23,7 +23,7 @@ resend:
   from: ${MAIL_FROM:alerta@sina.ia.br}
 
 firebase:
-  credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:secrets/firebase.json}
 
 sina:
   device-token-pepper: ${DEVICE_TOKEN_PEPPER:}

@@ -6,6 +6,8 @@ services:
     container_name: sina-backend-java
     ports:
       - "8081:8080"
+    volumes:
+      - ./secrets:/app/secrets:ro
     env_file:
       - .env
     environment:
