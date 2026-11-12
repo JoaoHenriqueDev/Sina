@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -64,6 +65,22 @@ class InactivityMonitorTest {
 
         setLastSeen(idoso.id(), now.minus(Duration.ofMinutes(31)));
         monitor.check(now);
+        verify(notifier, times(2)).notifyInactive(argThat(d -> d.getId().equals(idoso.id())));
+    }
+
+    @Test
+    void falhaNoAvisoDesfazAMarcaETentaDeNovoNoProximoCiclo() throws Exception {
+        Instant now = Instant.now();
+        Device idoso = register("PROTECTED");
+        setLastSeen(idoso.id(), now.minus(Duration.ofMinutes(40)));
+        doThrow(new IllegalStateException("falha")).doNothing()
+                .when(notifier).notifyInactive(argThat(d -> d.getId().equals(idoso.id())));
+
+        assertThat(monitor.check(now)).isZero();
+        assertThat(notifiedAt(idoso.id())).isNull();
+
+        assertThat(monitor.check(now.plus(Duration.ofMinutes(5)))).isEqualTo(1);
+        assertThat(notifiedAt(idoso.id())).isNotNull();
         verify(notifier, times(2)).notifyInactive(argThat(d -> d.getId().equals(idoso.id())));
     }
 

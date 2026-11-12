@@ -14,9 +14,11 @@ final class LocalRules {
 
     static LlmVerdict evaluate(List<LocalSignal> signals) {
         if (signals.isEmpty()) {
-            return new LlmVerdict(Verdict.SAFE, ScamType.NONE, 0.3,
+            // Nada foi analisado de fato: nunca devolver SAFE. Fica SUSPICIOUS com confiança baixa
+            // e o AnalysisService não grava alerta para a família.
+            return new LlmVerdict(Verdict.SUSPICIOUS, ScamType.NONE, 0.3,
                     "Não conseguimos analisar esta mensagem agora. Na dúvida, não clique em links, não faça Pix e não passe códigos.",
-                    "Mensagem sem sinais de risco nas regras locais.");
+                    "Mensagem não analisada: serviço de análise indisponível e sem sinais locais.");
         }
         double confidence = Math.min(0.7, 0.4 + 0.1 * signals.stream().distinct().count());
         return new LlmVerdict(Verdict.SUSPICIOUS, typeOf(signals), confidence,

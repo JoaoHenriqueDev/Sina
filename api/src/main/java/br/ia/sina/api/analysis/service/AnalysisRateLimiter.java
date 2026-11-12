@@ -2,6 +2,7 @@ package br.ia.sina.api.analysis.service;
 
 import br.ia.sina.api.common.ApiException;
 import br.ia.sina.api.common.ErrorCode;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -14,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class AnalysisRateLimiter {
 
-    public static final int MAX_REQUESTS = 20;
+    /** Por dispositivo, com folga para reanálises quando chegam mensagens novas na mesma conversa. */
+    public static final int MAX_REQUESTS = 30;
     public static final Duration WINDOW = Duration.ofMinutes(1);
 
     private record Window(Instant start, int requests) {
@@ -38,6 +40,16 @@ public class AnalysisRateLimiter {
         if (w.requests() > MAX_REQUESTS) {
             throw new ApiException(ErrorCode.RATE_LIMITED, "Muitas análises em pouco tempo, tente novamente em instantes");
         }
+    }
+
+    /** Remove janelas vencidas para o mapa não crescer com cada dispositivo que já passou por aqui. */
+    @Scheduled(fixedDelayString = "PT5M", initialDelayString = "PT5M")
+    public void evictExpired() {
+        windows.values().removeIf(this::isExpired);
+    }
+
+    int size() {
+        return windows.size();
     }
 
     private boolean isExpired(Window w) {

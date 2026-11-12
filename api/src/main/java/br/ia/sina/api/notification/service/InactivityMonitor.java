@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Component
 public class InactivityMonitor {
@@ -31,17 +32,20 @@ public class InactivityMonitor {
     }
 
     public int check(Instant now) {
-        Instant limit = now.minus(PairingService.INACTIVE_AFTER);
+        // Mesma precisão do timestamptz, para o unmark achar exatamente o valor gravado.
+        Instant mark = now.truncatedTo(ChronoUnit.MICROS);
+        Instant limit = mark.minus(PairingService.INACTIVE_AFTER);
         int notified = 0;
         for (Device device : deviceRepository.findByRoleAndLastSeenAtBeforeAndInactiveNotifiedAtIsNull(DeviceRole.PROTECTED, limit)) {
-            if (deviceRepository.markInactiveNotified(device.getId(), limit, now) != 1) {
+            if (deviceRepository.markInactiveNotified(device.getId(), limit, mark) != 1) {
                 continue;
             }
             try {
                 notifier.notifyInactive(device);
                 notified++;
             } catch (RuntimeException e) {
-                log.warn("Falha ao avisar inatividade: {}", e.getClass().getSimpleName());
+                log.warn("Falha ao avisar inatividade, nova tentativa no próximo ciclo: {}", e.getClass().getSimpleName());
+                deviceRepository.unmarkInactiveNotified(device.getId(), mark);
             }
         }
         return notified;

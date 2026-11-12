@@ -167,6 +167,31 @@ class NotificationFlowTest {
     }
 
     @Test
+    void familiarQuePareiaDepoisEAvisadoNaReanaliseSemDuplicarAlertaNemEntrega() throws Exception {
+        Device idoso = register("{\"role\":\"PROTECTED\"}");
+        String first = JsonPath.read(mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + idoso.token())
+                        .contentType(MediaType.APPLICATION_JSON).content(analyzeBody()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.guardianNotified").value(false))
+                .andReturn().getResponse().getContentAsString(), "$.alertId");
+
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\"}");
+        pair(idoso, familiar);
+        String second = analyze(idoso);
+        mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + idoso.token())
+                        .contentType(MediaType.APPLICATION_JSON).content(analyzeBody()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alertId").value(first))
+                .andExpect(jsonPath("$.guardianNotified").value(false));
+
+        assertThat(second).isEqualTo(first);
+        assertThat(deliveryRepository.findByAlertIdOrderByCreatedAt(UUID.fromString(first)))
+                .singleElement()
+                .satisfies(d -> assertThat(d.getStatus()).isEqualTo(DeliveryStatus.SENT));
+        verify(push).send(eq("tok-1"), anyMap());
+    }
+
+    @Test
     void canaisDesligadosNaoGeramEntrega() throws Exception {
         when(push.enabled()).thenReturn(false);
         when(email.enabled()).thenReturn(false);

@@ -4,6 +4,8 @@ import br.ia.sina.api.analysis.model.Engine;
 import br.ia.sina.api.analysis.model.LocalSignal;
 import br.ia.sina.api.analysis.model.Source;
 import br.ia.sina.api.analysis.model.Verdict;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,7 +23,13 @@ public final class AnalysisDtos {
             @NotNull Source source,
             @NotBlank @Size(max = 1000) String text,
             @Size(max = 10) List<@NotNull LocalSignal> localSignals,
-            @NotNull Instant receivedAt) {
+            @NotNull Instant receivedAt,
+            @Min(1) @Max(50) Integer messageCount) {
+
+        /** Opcional: quantas mensagens consecutivas vieram juntas em text. Só para métrica/log. */
+        public AnalyzeRequest(Source source, String text, List<LocalSignal> localSignals, Instant receivedAt) {
+            this(source, text, localSignals, receivedAt, null);
+        }
     }
 
     public record AnalyzeResponse(

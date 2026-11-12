@@ -183,7 +183,7 @@ flowchart TB
   <tr><td>E-mail</td><td>Resend (API HTTP)</td><td><span class="tag ok">definido</span></td><td>Remetente <code>alerta@sina.ia.br</code>; domínio verificado com SPF, DKIM e DMARC</td></tr>
   <tr><td>Identidade dos dispositivos</td><td>Token próprio gerado no primeiro uso, guardando só o HMAC-SHA256</td><td><span class="tag ok">definido</span></td><td>Sem cadastro nem senha</td></tr>
   <tr><td>Pareamento</td><td>Código de 6 dígitos, uso único, válido por 10 minutos; o QR carrega o mesmo código</td><td><span class="tag ok">definido</span></td><td>5 tentativas erradas a cada 10 minutos por familiar</td></tr>
-  <tr><td>Limite e cache</td><td>20 análises por minuto por dispositivo; cache por hash do texto por 7 dias</td><td><span class="tag ok">definido</span></td><td>Limites em memória, suficientes para uma instância</td></tr>
+  <tr><td>Limite e cache</td><td>30 análises por minuto por dispositivo (folga para reanálises da mesma conversa); cache por hash do texto por 7 dias</td><td><span class="tag ok">definido</span></td><td>Limites em memória, suficientes para uma instância</td></tr>
   <tr><td>Envio assíncrono e tarefas agendadas</td><td><code>@Async</code> e <code>@Scheduled</code> do Spring</td><td><span class="tag ok">definido</span></td><td>Push e e-mail não atrasam a resposta; aviso de inatividade e limpeza do cache</td></tr>
   <tr><td>Testes</td><td>JUnit 5, Mockito e MockMvc contra PostgreSQL real, mais o dataset de golpes</td><td><span class="tag ok">definido</span></td><td>55 testes; OpenAI, FCM e Resend simulados</td></tr>
   <tr><td>Hospedagem</td><td>Render ou Railway, com Docker e PostgreSQL gerenciado</td><td><span class="tag sug">sugestão</span></td><td>Precisa ficar no ar durante a avaliação; planos gratuitos costumam hibernar, o que atrasa a demo</td></tr>
@@ -301,7 +301,8 @@ erDiagram
   "source": "WHATSAPP",
   "text": "Oi mãe, mudei de número. Preciso que faça um Pix de [VALOR] urgente.",
   "localSignals": ["URGENCY", "PIX_REQUEST"],
-  "receivedAt": "2026-11-09T15:24:00Z"
+  "receivedAt": "2026-11-09T15:24:00Z",
+  "messageCount": 1
 }</code></pre>
 <p>Resposta <code>200</code>:</p>
 <pre><code>{
@@ -314,14 +315,15 @@ erDiagram
   "guardianNotified": true
 }</code></pre>
 <ul>
-  <li><code>source</code>: <code>SMS</code> ou <code>WHATSAPP</code>. <code>text</code>: obrigatório, até 1.000 caracteres. <code>receivedAt</code>: obrigatório.</li>
+  <li><code>source</code>: <code>SMS</code> ou <code>WHATSAPP</code>. <code>text</code>: obrigatório, até 1.000 caracteres; pode trazer várias mensagens consecutivas da mesma conversa separadas por quebra de linha, analisadas em conjunto. Acima de 1.000 a API devolve <code>400 VALIDATION_ERROR</code>, por isso o app corta antes de enviar, mantendo as mensagens mais recentes. <code>receivedAt</code>: obrigatório. <code>messageCount</code>: opcional, de 1 a 50, quantas mensagens vieram em <code>text</code>; usado só em métrica e log.</li>
   <li><code>localSignals</code>: até 10 sinais das regras locais, entre <code>SHORTENED_LINK</code>, <code>URGENCY</code>, <code>PIX_REQUEST</code> e <code>CODE_REQUEST</code>. Entram como contexto no prompt e alimentam o fallback.</li>
-  <li><code>verdict</code>: <code>SCAM</code>, <code>SUSPICIOUS</code> ou <code>SAFE</code>. <code>engine</code>: <code>LLM</code>, <code>CACHE</code> ou <code>RULES</code> (regras locais usadas quando a OpenAI falha; nunca devolvem <code>SCAM</code> e não entram no cache).</li>
+  <li><code>verdict</code>: <code>SCAM</code>, <code>SUSPICIOUS</code> ou <code>SAFE</code>. <code>engine</code>: <code>LLM</code>, <code>CACHE</code> ou <code>RULES</code> (regras locais usadas quando a OpenAI falha; nunca devolvem <code>SCAM</code> e não entram no cache). Sem a OpenAI e sem <code>localSignals</code>, a resposta é <code>SUSPICIOUS</code> com <code>confidence</code> 0,3, <code>scamType</code> <code>null</code> e <code>alertId</code> <code>null</code>: nada foi analisado, então a API nunca diz <code>SAFE</code> e não grava alerta.</li>
   <li><code>scamType</code>: <code>FALSE_RELATIVE</code>, <code>FALSE_BANK</code>, <code>FALSE_DELIVERY</code>, <code>FALSE_PRIZE_OR_DEBT</code>, <code>PHISHING_LINK</code>, <code>VERIFICATION_CODE</code>, <code>FAKE_INVESTMENT</code>, <code>FALSE_BENEFIT</code>, <code>CLONED_ACCOUNT</code> ou <code>OTHER</code>; é <code>null</code> quando <code>SAFE</code>.</li>
   <li>O alerta é gravado quando o veredito não é <code>SAFE</code>; <code>alertId</code> é <code>null</code> quando <code>SAFE</code>. O familiar só é avisado quando <code>verdict</code> é <code>SCAM</code> e <code>confidence</code> é pelo menos 0,8.</li>
+  <li>A mesma mensagem do mesmo idoso em até 6 horas reaproveita o alerta anterior com o mesmo veredito, sem avisar de novo. A exceção é quando a família ainda não tinha sido acionada para aquele alerta (por exemplo, o familiar pareou depois): aí o aviso sai na reanálise. Requisições simultâneas iguais são serializadas por um advisory lock do PostgreSQL, sem alerta nem aviso duplicado.</li>
   <li><code>guardianNotified</code> é <code>true</code> quando pelo menos um familiar pareado tem push ou e-mail disponível e o envio foi disparado. O envio acontece em segundo plano; o resultado de cada canal fica em <code>alert_delivery</code>.</li>
   <li>A chamada à OpenAI tem tempo limite de 8 segundos. Se a API não responder em 10 segundos, o app mostra um alerta local baseado em <code>localSignals</code>.</li>
-  <li>Mais de 20 análises por minuto pelo mesmo dispositivo devolvem <code>429 RATE_LIMITED</code>.</li>
+  <li>Mais de 30 análises por minuto pelo mesmo dispositivo devolvem <code>429 RATE_LIMITED</code>. O contador fica em memória, por instância.</li>
 </ul>
 
 <h3>Histórico de alertas</h3>
@@ -364,7 +366,7 @@ erDiagram
 <h3>Tarefas agendadas</h3>
 <div class="table-wrap"><table>
   <tr><th>Tarefa</th><th>Frequência</th><th>O que faz</th></tr>
-  <tr><td>Aviso de inatividade</td><td>A cada 5 minutos</td><td>Envia <code>PROTECTION_INACTIVE</code> para protegidos sem sinal há mais de 30 minutos, uma vez só até o próximo heartbeat</td></tr>
+  <tr><td>Aviso de inatividade</td><td>A cada 5 minutos</td><td>Envia <code>PROTECTION_INACTIVE</code> para protegidos sem sinal há mais de 30 minutos, uma vez só até o próximo heartbeat; se o aviso falhar, tenta de novo no ciclo seguinte</td></tr>
   <tr><td>Limpeza do cache</td><td>De hora em hora</td><td>Apaga entradas de <code>analysis_cache</code> com mais de 7 dias</td></tr>
 </table></div>
 
@@ -378,7 +380,7 @@ erDiagram
   <tr><td>404</td><td><code>PAIRING_NOT_FOUND</code></td><td>Vínculo inexistente ou de outro dispositivo</td></tr>
   <tr><td>409</td><td><code>ALREADY_PAIRED</code></td><td>Os dois dispositivos já estão vinculados</td></tr>
   <tr><td>410</td><td><code>PAIRING_CODE_EXPIRED</code></td><td>Código expirado ou já usado</td></tr>
-  <tr><td>429</td><td><code>RATE_LIMITED</code></td><td>Mais de 20 análises por minuto ou 5 códigos errados em 10 minutos</td></tr>
+  <tr><td>429</td><td><code>RATE_LIMITED</code></td><td>Mais de 30 análises por minuto ou 5 códigos errados em 10 minutos</td></tr>
   <tr><td>500</td><td><code>INTERNAL_ERROR</code></td><td>Erro inesperado na API</td></tr>
 </table></div>
 
@@ -598,7 +600,7 @@ gantt
   <li class="done">Equipe de 2 pessoas; monorepo <code>sina</code>; domínio <code>sina.ia.br</code>.</li>
   <li class="done">Distribuição por APK em GitHub Releases; Play Store depois do evento.</li>
   <li class="done">Modelo <code>gpt-6-luna</code> na OpenAI, com tempo limite de 8 segundos.</li>
-  <li class="done">Valores: limiar de 0,8, código de 10 minutos, sinal de vida de 15 e 30 minutos, texto de até 1.000 caracteres, 20 análises por minuto e cache de 7 dias.</li>
+  <li class="done">Valores: limiar de 0,8, código de 10 minutos, sinal de vida de 15 e 30 minutos, texto de até 1.000 caracteres, 30 análises por minuto e cache de 7 dias.</li>
   <li class="done">Sinais locais: <code>SHORTENED_LINK</code>, <code>URGENCY</code>, <code>PIX_REQUEST</code> e <code>CODE_REQUEST</code>.</li>
   <li class="done">O familiar recebe categoria, resumo e um trecho anonimizado da mensagem de golpe, sem que o texto seja gravado.</li>
   <li class="done">Migrações <code>V1</code> (seis tabelas) e <code>V2</code> (aviso de inatividade); <code>api/.env.example</code> atualizado.</li>
