@@ -74,14 +74,16 @@ public class AnalysisService {
         limiter.acquire(device.getId());
         List<LocalSignal> signals = request.localSignals() == null ? List.of() : request.localSignals();
         String hash = textHash(request.text());
+        String cacheKey = cacheKey(request, signals);
 
-        Result result = cached(hash)
+        Result result = cached(cacheKey)
                 .map(v -> new Result(v, Engine.CACHE, true))
-                .orElseGet(() -> fresh(hash, request, signals));
+                .orElseGet(() -> fresh(cacheKey, request, signals));
         LlmVerdict v = result.verdict();
         String scamType = v.scamType() == ScamType.NONE ? null : v.scamType().name();
-        log.info("Análise concluída: source={} messageCount={} engine={} verdict={}",
-                request.source(), request.messageCount(), result.engine(), v.verdict());
+        log.info("Análise concluída: source={} messageCount={} context={} signals={} engine={} verdict={} scamType={} confidence={}",
+                request.source(), request.messageCount(), request.contextOrNull() != null, signals, result.engine(),
+                v.verdict(), v.scamType(), v.confidence());
 
         if (v.verdict() == Verdict.SAFE || !result.persist()) {
             return new AnalyzeResponse(v.verdict(), scamType, v.confidence(), v.elderlyMessage(), result.engine(), null, false);
@@ -111,7 +113,7 @@ public class AnalysisService {
                     pending ? notifier.prepareScam(ScamNotification.of(alert, request.text())) : Optional.empty());
         }
         Alert alert = alertRepository.save(new Alert(protectedId, request.source(), v.verdict(), scamType,
-                v.confidence(), v.familySummary(), hash));
+                v.confidence(), v.familySummary(), hash, ScamNotification.excerpt(request.text())));
         return new Outcome(alert.getId(),
                 shouldNotify ? notifier.prepareScam(ScamNotification.of(alert, request.text())) : Optional.empty());
     }
@@ -132,10 +134,10 @@ public class AnalysisService {
     private Result fresh(String hash, AnalyzeRequest request, List<LocalSignal> signals) {
         LlmVerdict verdict;
         try {
-            verdict = openAi.classify(request.source(), request.text(), signals);
+            verdict = openAi.classify(request.source(), request.text(), signals, request.contextOrNull());
         } catch (RuntimeException e) {
             log.warn("Falha na análise pelo LLM, usando regras locais: {}", e.getClass().getSimpleName());
-            return new Result(LocalRules.evaluate(signals), Engine.RULES, !signals.isEmpty());
+            return new Result(LocalRules.evaluate(signals), Engine.RULES, LocalRules.hasRiskSignals(signals));
         }
         try {
             cacheRepository.save(new AnalysisCache(hash, verdict.verdict(), mapper.writeValueAsString(verdict)));
@@ -146,8 +148,23 @@ public class AnalysisService {
     }
 
     private String textHash(String text) {
-        String normalized = text.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
-        return tokenService.hash("analysis:" + normalized);
+        return tokenService.hash("analysis:" + normalize(text));
+    }
+
+    /** O veredito depende do contexto e da pista de remetente, então o cache também. */
+    private String cacheKey(AnalyzeRequest request, List<LocalSignal> signals) {
+        String context = request.contextOrNull();
+        String sender = signals.contains(LocalSignal.UNKNOWN_SENDER) ? "U"
+                : signals.contains(LocalSignal.SAVED_CONTACT) ? "S" : "";
+        if (context == null && sender.isEmpty()) {
+            return textHash(request.text());
+        }
+        return tokenService.hash("analysis:" + sender + "|" + (context == null ? "" : normalize(context)) + "|"
+                + normalize(request.text()));
+    }
+
+    private static String normalize(String text) {
+        return text.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     /** Chave de 64 bits para o advisory lock; colisões só serializam mais, nunca liberam a trava. */

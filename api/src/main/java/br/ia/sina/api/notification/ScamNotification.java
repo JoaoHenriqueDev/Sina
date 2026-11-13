@@ -19,11 +19,12 @@ public record ScamNotification(
     public static final int EXCERPT_MAX = 300;
 
     public static ScamNotification of(Alert alert, String text) {
-        String excerpt = text.strip();
-        if (excerpt.length() > EXCERPT_MAX) {
-            excerpt = excerpt.substring(0, EXCERPT_MAX - 1) + "…";
-        }
         return new ScamNotification(alert.getId(), alert.getProtectedId(), alert.getSource(), alert.getScamType(),
-                alert.getConfidence(), alert.getFamilySummary(), excerpt, alert.getCreatedAt());
+                alert.getConfidence(), alert.getFamilySummary(), excerpt(text), alert.getCreatedAt());
+    }
+
+    public static String excerpt(String text) {
+        String excerpt = text.strip();
+        return excerpt.length() > EXCERPT_MAX ? excerpt.substring(0, EXCERPT_MAX - 1) + "…" : excerpt;
     }
 }

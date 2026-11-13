@@ -79,7 +79,7 @@ public class PairingService {
         }
         Pairing pairing = pairingRepository.save(new Pairing(protectedId, guardian.getId()));
         Device protectedDevice = deviceRepository.findById(protectedId).orElseThrow();
-        return new PairingItem(pairing.getId(), protectedPeer(protectedDevice, now), null);
+        return new PairingItem(pairing.getId(), protectedPeer(protectedDevice, now), null, pairing.getCreatedAt());
     }
 
     @Transactional(readOnly = true)
@@ -93,8 +93,8 @@ public class PairingService {
                 .collect(Collectors.toMap(Device::getId, Function.identity()));
         Instant now = Instant.now();
         return new PairingList(pairings.stream().map(p -> isGuardian
-                ? new PairingItem(p.getId(), protectedPeer(peers.get(p.getProtectedId()), now), null)
-                : new PairingItem(p.getId(), null, guardianPeer(peers.get(p.getGuardianId())))).toList());
+                ? new PairingItem(p.getId(), protectedPeer(peers.get(p.getProtectedId()), now), null, p.getCreatedAt())
+                : new PairingItem(p.getId(), null, guardianPeer(peers.get(p.getGuardianId())), p.getCreatedAt())).toList());
     }
 
     @Transactional

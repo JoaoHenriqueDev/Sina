@@ -24,11 +24,15 @@ public final class AnalysisDtos {
             @NotBlank @Size(max = 1000) String text,
             @Size(max = 10) List<@NotNull LocalSignal> localSignals,
             @NotNull Instant receivedAt,
-            @Min(1) @Max(50) Integer messageCount) {
+            @Min(1) @Max(50) Integer messageCount,
+            @Size(max = 1000) String context) {
 
-        /** Opcional: quantas mensagens consecutivas vieram juntas em text. Só para métrica/log. */
         public AnalyzeRequest(Source source, String text, List<LocalSignal> localSignals, Instant receivedAt) {
-            this(source, text, localSignals, receivedAt, null);
+            this(source, text, localSignals, receivedAt, null, null);
+        }
+
+        public String contextOrNull() {
+            return context == null || context.isBlank() ? null : context.strip();
         }
     }
 

@@ -32,7 +32,8 @@ public final class PairingDtos {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record PairingItem(UUID pairingId,
                               @JsonProperty("protected") PeerDevice protectedDevice,
-                              PeerDevice guardian) {
+                              PeerDevice guardian,
+                              Instant createdAt) {
     }
 
     public record PairingList(List<PairingItem> items) {

@@ -49,7 +49,7 @@ class AnalysisControllerTest {
 
     @Test
     void analisaGravaAlertaECacheiaSemOTexto() throws Exception {
-        when(openAi.classify(any(), anyString(), anyList()))
+        when(openAi.classify(any(), anyString(), anyList(), any()))
                 .thenReturn(new LlmVerdict(Verdict.SCAM, ScamType.FALSE_RELATIVE, 0.93, "Não faça o Pix.", "Falso parente pedindo Pix."));
         String body = register("PROTECTED");
         String token = JsonPath.read(body, "$.deviceToken");
@@ -68,7 +68,7 @@ class AnalysisControllerTest {
                 .andExpect(jsonPath("$.guardianNotified").value(false))
                 .andReturn().getResponse().getContentAsString();
 
-        verify(openAi, times(1)).classify(any(), anyString(), anyList());
+        verify(openAi, times(1)).classify(any(), anyString(), anyList(), any());
         assertThat(alertRepository.findAll()).filteredOn(a -> a.getProtectedId().equals(deviceId)).hasSize(1);
         assertThat((String) JsonPath.read(second, "$.alertId")).isEqualTo(JsonPath.read(first, "$.alertId"));
         assertThat(cacheRepository.findAll()).allSatisfy(c -> assertThat(c.getResponseJson()).doesNotContain(text));
@@ -101,7 +101,7 @@ class AnalysisControllerTest {
 
     @Test
     void aceitaVariasMensagensComMessageCount() throws Exception {
-        when(openAi.classify(any(), anyString(), anyList()))
+        when(openAi.classify(any(), anyString(), anyList(), any()))
                 .thenReturn(new LlmVerdict(Verdict.SAFE, ScamType.NONE, 0.9, "Mensagem sem perigo.", "Conversa comum."));
         String token = JsonPath.read(register("PROTECTED"), "$.deviceToken");
         mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + token)
@@ -109,7 +109,7 @@ class AnalysisControllerTest {
                         .content("{\"source\":\"WHATSAPP\",\"text\":\"Oi\\nTudo bem?\\nMe liga depois\",\"messageCount\":3,\"receivedAt\":\"2026-11-10T12:00:00Z\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.verdict").value("SAFE"));
-        verify(openAi).classify(any(), org.mockito.ArgumentMatchers.eq("Oi\nTudo bem?\nMe liga depois"), anyList());
+        verify(openAi).classify(any(), org.mockito.ArgumentMatchers.eq("Oi\nTudo bem?\nMe liga depois"), anyList(), any());
     }
 
     @Test

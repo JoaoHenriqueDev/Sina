@@ -21,11 +21,12 @@ public final class AlertDtos {
             String scamType,
             double confidence,
             String familySummary,
+            String messageExcerpt,
             Instant createdAt) {
 
         public static AlertItem of(Alert alert) {
             return new AlertItem(alert.getId(), alert.getProtectedId(), alert.getSource(), alert.getVerdict(),
-                    alert.getScamType(), alert.getConfidence(), alert.getFamilySummary(), alert.getCreatedAt());
+                    alert.getScamType(), alert.getConfidence(), alert.getFamilySummary(), alert.getMessageExcerpt(), alert.getCreatedAt());
         }
     }
 
