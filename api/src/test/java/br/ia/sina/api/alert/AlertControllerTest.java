@@ -85,6 +85,7 @@ class AlertControllerTest {
                 .andExpect(jsonPath("$.items[0].scamType").value("FALSE_RELATIVE"))
                 .andExpect(jsonPath("$.items[0].confidence").value(0.95))
                 .andExpect(jsonPath("$.items[0].familySummary").value("Falso parente pedindo Pix."))
+                .andExpect(jsonPath("$.items[0].messageExcerpt").value("Mudei de número, faz um Pix"))
                 .andExpect(jsonPath("$.items[0].createdAt").value("2026-11-10T12:00:00Z"))
                 .andExpect(jsonPath("$.nextCursor").isEmpty());
     }
@@ -159,8 +160,8 @@ class AlertControllerTest {
     private UUID insertAlert(UUID protectedId, Instant createdAt) {
         UUID id = UUID.randomUUID();
         jdbc.update("""
-                INSERT INTO alert (id, protected_id, source, verdict, scam_type, confidence, family_summary, created_at)
-                VALUES (?, ?, 'WHATSAPP', 'SCAM', 'FALSE_RELATIVE', 0.95, 'Falso parente pedindo Pix.', ?)
+                INSERT INTO alert (id, protected_id, source, verdict, scam_type, confidence, family_summary, message_excerpt, created_at)
+                VALUES (?, ?, 'WHATSAPP', 'SCAM', 'FALSE_RELATIVE', 0.95, 'Falso parente pedindo Pix.', 'Mudei de número, faz um Pix', ?)
                 """, id, protectedId, Timestamp.from(createdAt));
         return id;
     }

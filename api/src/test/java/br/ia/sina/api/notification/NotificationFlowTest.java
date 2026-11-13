@@ -85,7 +85,7 @@ class NotificationFlowTest {
 
     @BeforeEach
     void setUp() {
-        when(openAi.classify(any(), anyString(), anyList()))
+        when(openAi.classify(any(), anyString(), anyList(), any()))
                 .thenReturn(new LlmVerdict(Verdict.SCAM, ScamType.FALSE_RELATIVE, 0.95,
                         "Isso é golpe. Não faça o Pix.", "Falso parente pedindo Pix urgente."));
         when(push.enabled()).thenReturn(true);

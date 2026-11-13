@@ -4,5 +4,7 @@ public enum LocalSignal {
     SHORTENED_LINK,
     URGENCY,
     PIX_REQUEST,
-    CODE_REQUEST
+    CODE_REQUEST,
+    UNKNOWN_SENDER,
+    SAVED_CONTACT
 }

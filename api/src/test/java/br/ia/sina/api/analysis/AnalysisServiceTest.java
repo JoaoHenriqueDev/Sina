@@ -151,7 +151,7 @@ class AnalysisServiceTest {
         AnalyzeResponse response = service.analyze(device, request(List.of()));
 
         assertThat(response.engine()).isEqualTo(Engine.CACHE);
-        verify(openAi, never()).classify(any(), anyString(), anyList());
+        verify(openAi, never()).classify(any(), anyString(), anyList(), any());
     }
 
     @Test
@@ -167,7 +167,7 @@ class AnalysisServiceTest {
 
     @Test
     void falhaDoLlmUsaRegrasSemCacheNemNotificacao() {
-        when(openAi.classify(any(), anyString(), anyList())).thenThrow(new OpenAiException("timeout"));
+        when(openAi.classify(any(), anyString(), anyList(), any())).thenThrow(new OpenAiException("timeout"));
 
         AnalyzeResponse response = service.analyze(device, request(List.of(LocalSignal.URGENCY, LocalSignal.CODE_REQUEST)));
 
@@ -181,7 +181,7 @@ class AnalysisServiceTest {
 
     @Test
     void falhaDoLlmSemSinaisNuncaDizQueEhSeguroENaoGravaAlerta() {
-        when(openAi.classify(any(), anyString(), anyList())).thenThrow(new OpenAiException("timeout"));
+        when(openAi.classify(any(), anyString(), anyList(), any())).thenThrow(new OpenAiException("timeout"));
 
         AnalyzeResponse response = service.analyze(device, request(null));
 
@@ -250,18 +250,42 @@ class AnalysisServiceTest {
     }
 
     private Alert duplicateOf(Verdict verdict, double confidence) {
-        Alert existing = new Alert(device.getId(), Source.WHATSAPP, verdict, "FALSE_RELATIVE", confidence, "Resumo", "h");
+        Alert existing = new Alert(device.getId(), Source.WHATSAPP, verdict, "FALSE_RELATIVE", confidence, "Resumo", "h", null);
         when(alertRepository.findFirstByProtectedIdAndTextHashAndCreatedAtAfterOrderByCreatedAtDesc(any(), anyString(), any()))
                 .thenReturn(Optional.of(existing));
         return existing;
     }
 
     private void llmReturns(Verdict verdict, ScamType type, double confidence) {
-        when(openAi.classify(any(), anyString(), anyList()))
+        when(openAi.classify(any(), anyString(), anyList(), any()))
                 .thenReturn(new LlmVerdict(verdict, type, confidence, "Mensagem ao idoso", "Resumo ao familiar"));
     }
 
     private AnalyzeRequest request(List<LocalSignal> signals) {
         return new AnalyzeRequest(Source.WHATSAPP, TEXT, signals, Instant.now());
+    }
+
+    @Test
+    void contextoERemetenteMudamAChaveDoCacheEVaoAoLlm() {
+        llmReturns(Verdict.SAFE, ScamType.NONE, 0.9);
+        service.analyze(device, request(List.of()));
+        service.analyze(device, new AnalyzeRequest(Source.WHATSAPP, TEXT, List.of(), Instant.now(), 2, "meu celular caiu"));
+        service.analyze(device, request(List.of(LocalSignal.UNKNOWN_SENDER)));
+
+        ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
+        verify(cacheRepository, times(3)).findById(keys.capture());
+        assertThat(keys.getAllValues()).doesNotHaveDuplicates();
+        verify(openAi).classify(any(), anyString(), anyList(), org.mockito.ArgumentMatchers.eq("meu celular caiu"));
+    }
+
+    @Test
+    void falhaDoLlmSoComSinalDeRemetenteNaoGravaAlerta() {
+        when(openAi.classify(any(), anyString(), anyList(), any())).thenThrow(new OpenAiException("timeout"));
+
+        AnalyzeResponse response = service.analyze(device, request(List.of(LocalSignal.UNKNOWN_SENDER)));
+
+        assertThat(response.engine()).isEqualTo(Engine.RULES);
+        assertThat(response.alertId()).isNull();
+        verify(alertRepository, never()).save(any());
     }
 }

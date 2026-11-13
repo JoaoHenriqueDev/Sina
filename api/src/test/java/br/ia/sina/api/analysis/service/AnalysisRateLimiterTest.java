@@ -5,6 +5,7 @@ import br.ia.sina.api.common.ErrorCode;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -51,5 +52,24 @@ class AnalysisRateLimiterTest {
         when(clock.instant()).thenReturn(start.plus(AnalysisRateLimiter.WINDOW));
         limiter.evictExpired();
         assertThat(limiter.size()).isEqualTo(1);
+    }
+
+    @Test
+    void bloqueiaAcimaDoLimiteDiario() {
+        Clock clock = mock(Clock.class);
+        Instant start = Instant.parse("2026-11-10T12:00:00Z");
+        AnalysisRateLimiter limiter = new AnalysisRateLimiter(clock);
+        UUID id = UUID.randomUUID();
+
+        for (int i = 0; i < AnalysisRateLimiter.MAX_DAILY_REQUESTS; i++) {
+            when(clock.instant()).thenReturn(start.plus(AnalysisRateLimiter.WINDOW.multipliedBy(i / AnalysisRateLimiter.MAX_REQUESTS)));
+            limiter.acquire(id);
+        }
+        when(clock.instant()).thenReturn(start.plus(Duration.ofHours(20)));
+        assertThatThrownBy(() -> limiter.acquire(id))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(ErrorCode.RATE_LIMITED));
+
+        when(clock.instant()).thenReturn(start.plus(AnalysisRateLimiter.DAILY_WINDOW));
+        limiter.acquire(id);
     }
 }

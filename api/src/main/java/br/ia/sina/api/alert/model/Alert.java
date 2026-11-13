@@ -50,11 +50,15 @@ public class Alert {
     @Column(updatable = false, length = 64)
     private String textHash;
 
+    /** Texto já anonimizado no aparelho, o mesmo enviado no push ao familiar. */
+    @Column(updatable = false, length = 300)
+    private String messageExcerpt;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
     public Alert(UUID protectedId, Source source, Verdict verdict, String scamType, double confidence, String familySummary,
-                 String textHash) {
+                 String textHash, String messageExcerpt) {
         this.protectedId = protectedId;
         this.source = source;
         this.verdict = verdict;
@@ -62,5 +66,6 @@ public class Alert {
         this.confidence = confidence;
         this.familySummary = familySummary;
         this.textHash = textHash;
+        this.messageExcerpt = messageExcerpt;
     }
 }

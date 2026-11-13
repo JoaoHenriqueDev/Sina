@@ -57,6 +57,7 @@ class PairingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].pairingId").value(pairingId))
+                .andExpect(jsonPath("$.items[0].createdAt").exists())
                 .andExpect(jsonPath("$.items[0].protected.protectionStatus").value("ACTIVE"))
                 .andExpect(jsonPath("$.items[0].protected.lastSeenAt").exists())
                 .andExpect(jsonPath("$.items[0].guardian").doesNotExist());
