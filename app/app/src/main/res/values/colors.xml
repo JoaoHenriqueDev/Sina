@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sina_dark">#FF2A2C30</color>
+    <color name="sina_scam">#FFBA1A1A</color>
+    <color name="sina_suspicious">#FF7C5800</color>
+</resources>
