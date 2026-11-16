@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sina demo</title>
+<link rel="icon" href="data:,">
+<meta name="description" content="Demonstração do Sina: celular da pessoa protegida e do familiar lado a lado, ligados à API real.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#E4E4E7;--page-text:#1A1B21;--page-muted:#44474F;--page-card:#FFFFFF;--page-border:#D4D4DA;
+  --dark:#2A2C30;--raised:#3A3C42;--sheet:#FAF9FF;--card:#FFFFFF;--border:#E2E2EA;--text:#1A1B21;--muted:#44474F;
+  --sub:#D4D4D8;--sub-strong:#E8E8EC;--orange:#FF7A1A;--orange-light:#FFE9DA;--neutral:#757780;
+  --scam-bg:#FFDAD6;--scam-fg:#410002;--scam-icon:#93000A;--sus-bg:#FFE3B0;--sus-fg:#2B1700;--sus-icon:#7A4F00;
+  --ok-bg:#C9F0D4;--ok-fg:#00210E;--ok-dot:#1E8E3E;--selected:#EEEDF4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--page:#0F1013;--page-text:#E8E8EC;--page-muted:#A9ABB3;--page-card:#1A1B1F;--page-border:#2E3036}
+}
+:root[data-theme="dark"]{--page:#0F1013;--page-text:#E8E8EC;--page-muted:#A9ABB3;--page-card:#1A1B1F;--page-border:#2E3036}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-text);font-family:Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit}
+.page{max-width:980px;margin:0 auto;padding:32px 16px 48px}
+.intro{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px}
+.intro h1{margin:0 0 6px;font-size:28px;line-height:34px;font-weight:500}
+.intro p{margin:0;color:var(--page-muted);font-size:15px;line-height:22px;max-width:640px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 28px;padding:0;list-style:none}
+.steps li{background:var(--page-card);border:1px solid var(--page-border);border-radius:16px;padding:14px 16px;font-size:14px;line-height:20px;color:var(--page-muted)}
+.steps b{display:block;color:var(--page-text);font-weight:500;margin-bottom:2px}
+.tabs{display:none;gap:8px;margin-bottom:16px}
+.tabs button{flex:1;height:44px;border-radius:22px;border:1px solid var(--page-border);background:var(--page-card);color:var(--page-text);font-weight:500;cursor:pointer}
+.tabs button[aria-selected="true"]{background:#2A2C30;color:#fff;border-color:#2A2C30}
+.phones{display:flex;gap:40px;justify-content:center;align-items:flex-start}
+.col{display:flex;flex-direction:column;align-items:center;gap:12px}
+.col h2{margin:0;font-size:14px;font-weight:500;letter-spacing:.4px;text-transform:uppercase;color:var(--page-muted)}
+.phone{width:380px;height:800px;padding:9px;background:#111318;border-radius:50px;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+.screen{position:relative;width:100%;height:100%;border-radius:41px;overflow:hidden;background:var(--dark);color:#fff;display:flex;flex-direction:column}
+.status{height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 30px;font-size:13px;font-weight:500}
+.status i{width:11px;height:11px;border-radius:6px;background:#0B0C0F;position:absolute;left:50%;top:11px;margin-left:-5px}
+.view{flex:1;display:flex;flex-direction:column;min-height:0}
+.topbar{height:60px;flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 4px}
+.topbar span{font-size:21px}
+.iconbtn{width:48px;height:48px;border-radius:24px;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
+.iconbtn:hover{background:rgba(255,255,255,.08)}
+.brand{height:60px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 24px;font-size:21px;font-weight:500}
+.hero{padding:10px 24px 28px;display:flex;flex-direction:column;gap:12px}
+.hero h1{margin:0;font-size:32px;line-height:38px;font-weight:500}
+.hero p{margin:0;font-size:15px;line-height:23px;color:var(--sub)}
+.hero p.big{font-size:18px;line-height:27px;color:var(--sub-strong)}
+.sheet{flex:1;min-height:0;overflow-y:auto;background:var(--sheet);color:var(--text);border-radius:36px 36px 0 0;padding:26px 16px 20px;display:flex;flex-direction:column;gap:14px}
+.sheet.flat{padding:20px 0 12px;gap:0}
+.section{padding:0 8px;font-size:12.5px;font-weight:500;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;padding:12px 16px;min-height:68px;border:0;background:none;width:100%;text-align:left;color:var(--text);cursor:pointer}
+.row+.row{border-top:1px solid var(--border)}
+.row:hover{background:#F5F4FA}
+.row .t{font-size:15.5px;font-weight:500;line-height:21px}
+.row .s{font-size:13px;line-height:18px;color:var(--muted)}
+.row .time{margin-left:auto;font-size:12px;color:var(--muted);align-self:flex-start;padding-top:3px}
+.grow{flex:1}
+.badge{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.scam{background:var(--scam-bg)}.sus{background:var(--sus-bg)}
+.btn{height:54px;border-radius:27px;border:0;background:var(--dark);color:#fff;font-size:16.5px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;cursor:pointer;flex-shrink:0}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.outline{background:none;border:2px solid var(--dark);color:var(--dark)}
+.btn.plain{background:none;color:var(--text);height:44px;font-size:15px}
+.pill{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border-radius:15px;font-size:13.5px;font-weight:500}
+.empty{padding:6px 8px;color:var(--muted);font-size:14.5px;line-height:21px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;color:var(--muted);padding-left:4px}
+.field input{height:54px;border-radius:12px;border:1px solid #757780;padding:0 16px;font-size:16px;background:none;color:var(--text);outline:none}
+.field input:focus{border:2px solid var(--dark);padding:0 15px}
+.field input.code{font-family:"Roboto Mono",monospace;font-size:24px;letter-spacing:8px;text-align:center}
+.err{color:#BA1A1A;font-size:13.5px;line-height:19px;padding:0 4px}
+.codebox{font-family:"Roboto Mono",monospace;font-size:42px;letter-spacing:6px;text-align:center;color:var(--text);margin:8px 0 4px}
+.note{background:var(--orange-light);border-radius:16px;padding:14px 16px;font-size:13.5px;line-height:20px;color:var(--text);display:flex;gap:12px}
+.msgcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.msgcard small{font-size:12.5px;color:var(--muted)}
+.msgcard p{margin:0;font-size:15px;line-height:22px}
+.excerpt{background:var(--selected);border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:21px}
+.info{display:flex;justify-content:space-between;gap:12px;padding:13px 16px;font-size:14.5px}
+.info+.info{border-top:1px solid var(--border)}
+.info span:first-child{color:var(--muted)}
+ol.todo{margin:0;padding:0 4px 0 24px;font-size:14.5px;line-height:21px;display:flex;flex-direction:column;gap:6px}
+.nav{flex-shrink:0;height:72px;background:#fff;border-top:1px solid var(--border);display:flex}
+.nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;position:relative}
+.nav .ind{width:60px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+.nav button[aria-selected="true"]{color:var(--text)}
+.nav button[aria-selected="true"] .ind{background:var(--orange-light)}
+.nav .dot{position:absolute;top:10px;left:calc(50% + 8px);min-width:16px;height:16px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.person{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.person .head{display:flex;align-items:center;gap:14px;padding:16px}
+.avatar{width:46px;height:46px;border-radius:23px;background:var(--orange-light);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:500;flex-shrink:0}
+.person .foot{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--scam-bg);color:var(--scam-fg);font-size:13.5px;font-weight:500;border:0;width:100%;text-align:left;cursor:pointer}
+.banner{position:absolute;left:10px;right:10px;top:40px;z-index:5;background:#F2F1F7;color:var(--text);border-radius:22px;padding:12px 14px;display:flex;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.28);transform:translateY(calc(-100% - 60px));visibility:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),visibility 0s .35s;cursor:pointer}
+.banner.show{transform:none;visibility:visible;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.banner .app{width:34px;height:34px;border-radius:17px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.banner .bt{display:block;font-size:12px;color:var(--muted)}
+.banner .bh{display:block;font-size:14px;font-weight:500;line-height:19px}
+.banner .bb{font-size:13.5px;line-height:19px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.toast{position:absolute;left:16px;right:16px;bottom:22px;z-index:5;background:#2F3036;color:#F2F0F4;border-radius:14px;padding:12px 16px;font-size:13.5px;line-height:19px;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.spinner{width:18px;height:18px;border:2.4px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{margin-top:32px;font-size:13.5px;line-height:20px;color:var(--page-muted);text-align:center}
+.footer a{color:inherit}
+@media (max-width:860px){
+  .page{padding:20px 16px 32px}
+  .steps{grid-template-columns:1fr}
+  .tabs{display:flex}
+  .phones{display:block}
+  .col{display:none}
+  .col.active{display:flex}
+  .col h2{display:none}
+  .phone{width:100%;max-width:380px;height:760px}
+}
+@media (prefers-reduced-motion:reduce){.banner,.toast{transition:none}.spinner{animation:none}}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="intro">
+    <svg width="52" height="52" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#2A2C30"/><rect x="7" y="27" width="50" height="35" rx="11" fill="#1A1B1E"/><path d="M45.5 20C45.5 13 38.9 9.5 32 9.5C25.1 9.5 18.5 13.5 18.5 20C18.5 27.5 25.1 30 32 32.5C38.9 35 45.5 37.5 45.5 45C45.5 51.5 38.9 55.5 32 55.5C25.1 55.5 18.5 52 18.5 45" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="2" fill="#FF7A1A"/><path d="M32 44.5v3.2" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round"/></svg>
+    <div>
+      <h1>Sina: demonstração</h1>
+      <p>Dois celulares simulados lado a lado, ligados à API real do Sina. A análise é feita de verdade pela IA. Todos os nomes e mensagens são fictícios.</p>
+    </div>
+  </header>
+  <ol class="steps">
+    <li><b>1. Ative a proteção</b>No celular da pessoa protegida, toque em Ativar proteção.</li>
+    <li><b>2. Ligue o familiar</b>No celular do familiar, cadastre-se e digite o código de 6 números.</li>
+    <li><b>3. Simule um golpe</b>Toque em Simular golpe e veja o aviso nos dois celulares.</li>
+  </ol>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-col="p">Pessoa protegida</button>
+    <button role="tab" aria-selected="false" data-col="g">Familiar</button>
+  </div>
+  <div class="phones">
+    <section class="col active" id="col-p"><h2>Pessoa protegida</h2><div class="phone"><div class="screen" id="phone-p"></div></div></section>
+    <section class="col" id="col-g"><h2>Familiar</h2><div class="phone"><div class="screen" id="phone-g"></div></div></section>
+  </div>
+  <p class="footer">No app, a mensagem chega pela notificação do SMS ou do WhatsApp; aqui o botão simula essa chegada. Antes do envio, nomes, valores, números e links são trocados por marcadores, como no app.<br><a href="https://github.com/JoaoHenriqueDev/Sina">Código no GitHub</a></p>
+</main>
+<script>
+const API = (new URLSearchParams(location.search).get('api') || 'https://sinaapimobile.sina.ia.br').replace(/\/$/, '');
+
+const ICON = {
+  back: ['M20 12H4', 'M10 6l-6 6 6 6'],
+  close: ['M6 6l12 12', 'M18 6L6 18'],
+  check: ['M20 6L9 17l-5-5'],
+  plus: ['M12 5v14', 'M5 12h14'],
+  warning: ['M12 3L2 20h20L12 3z', 'M12 10v4', 'M12 17v.5'],
+  alert: ['M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0', 'M12 8v5', 'M12 16.5v.5'],
+  clock: ['M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0', 'M12 7v5l3 2'],
+  bell: ['M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8', 'M10 20a2 2 0 0 0 4 0'],
+  shield: ['M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z'],
+  personAdd: ['M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0', 'M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6', 'M19 8v6M16 11h6'],
+  message: ['M4 5h16v11H8l-4 4z'],
+};
+const icon = (name, color, size = 24, stroke = 2) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name].map(d => `<path d="${d}"/>`).join('')}</svg>`;
+const LOGO = `<svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="7" y="27" width="50" height="35" rx="11" fill="#1A1B1E"/><path d="M45.5 20C45.5 13 38.9 9.5 32 9.5C25.1 9.5 18.5 13.5 18.5 20C18.5 27.5 25.1 30 32 32.5C38.9 35 45.5 37.5 45.5 45C45.5 51.5 38.9 55.5 32 55.5C25.1 55.5 18.5 52 18.5 45" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="2" fill="#FF7A1A"/><path d="M32 44.5v3.2" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round"/></svg>`;
+const BIGLOGO = LOGO.replace('width="34" height="34"', 'width="80" height="80"');
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hhmm = d => new Date(d).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+const clock = () => hhmm(Date.now());
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+const whenLabel = d => sameDay(d, Date.now()) ? `Hoje, ${hhmm(d)}` : `${new Date(d).toLocaleDateString('pt-BR')}, ${hhmm(d)}`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const LABEL = {
+  FALSE_RELATIVE: 'falso parente', FALSE_BANK: 'falsa central do banco', FALSE_DELIVERY: 'falsa entrega',
+  FALSE_PRIZE_OR_DEBT: 'falso prêmio ou dívida', PHISHING_LINK: 'link suspeito', VERIFICATION_CODE: 'pedido de código',
+  FAKE_INVESTMENT: 'falso investimento', FALSE_BENEFIT: 'falso benefício', CLONED_ACCOUNT: 'conta clonada',
+};
+const DESC = {
+  FALSE_RELATIVE: 'Diz ser um familiar com número novo e pede dinheiro.',
+  FALSE_BANK: 'Finge ser do banco e pede dados, código ou pagamento.',
+  FALSE_DELIVERY: 'Aviso de entrega que cobra taxa ou manda abrir link.',
+  FALSE_PRIZE_OR_DEBT: 'Fala de prêmio ou dívida para pedir pagamento.',
+  PHISHING_LINK: 'Manda abrir um link de um site desconhecido.',
+  VERIFICATION_CODE: 'Pede um código que chegou no seu celular.',
+  FAKE_INVESTMENT: 'Promete lucro fácil para pedir dinheiro.',
+  FALSE_BENEFIT: 'Fala de benefício do governo para pedir dados ou pagamento.',
+  CLONED_ACCOUNT: 'Conta de alguém conhecido pedindo dinheiro.',
+};
+const label = t => LABEL[t] || 'mensagem suspeita';
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+const SCAMS = [
+  {source: 'WHATSAPP', from: '+55 11 98765-4321', text: 'Oi mãe, mudei de número, salva esse aqui. Preciso pagar um boleto hoje e meu app do banco travou. Consegue me fazer um Pix de R$ 1.850,00? Amanhã te devolvo.'},
+  {source: 'SMS', from: '29045', text: 'CORREIOS: sua encomenda está retida por falta de pagamento da taxa de R$ 12,90. Regularize em ent-rastreio.top/br em até 24h.'},
+  {source: 'SMS', from: '40049876', text: 'BANCO: compra de R$ 3.200,00 aprovada no seu cartão. Se não reconhece, ligue agora para 0800 591 2087 e informe o código que vamos enviar.'},
+  {source: 'SMS', from: '11 97777-1020', text: 'Parabéns! Seu CPF foi sorteado na Nota Premiada e você tem R$ 5.000,00 a receber. Pague a taxa de liberação em bit.ly/premio-np ainda hoje.'},
+];
+const NORMALS = [
+  {source: 'WHATSAPP', from: 'Carla (filha)', text: 'Mãe, chego aí umas 19h pra jantar. Quer que eu leve pão?'},
+  {source: 'SMS', from: 'Farmácia', text: 'Seu pedido está pronto para retirada. Atendimento das 8h às 22h.'},
+];
+
+const Anon = (() => {
+  const shorteners = new Set(['bit.ly','tinyurl.com','cutt.ly','is.gd','t.co','goo.gl','rb.gy','shorturl.at','tiny.cc','ow.ly','s.id','encurtador.com.br','abre.ai','l1nk.dev','v.gd','t.ly']);
+  const TLDS = 'com|br|net|org|info|biz|top|xyz|site|online|link|click|shop|store|app|io|me|ly|co|cc|gd|at|id|ai|dev|live|vip|club|icu|cfd|sbs|lat|pro|gov|edu|us|tk|ml|ga|cf|gq|pw|ws|in|ru|cn|to|gl';
+  const email = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
+  const url = new RegExp(`\\b(?:https?://)?(?:www\\.)?((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${TLDS}))\\b(?![.\\w-]*@)(?:[/?#][^\\s]*)?`, 'gi');
+  const cpf = /(?<!\d)\d{3}\.\d{3}\.\d{3}-\d{2}(?!\d)/g;
+  const money = /R\$\s?\d+(?:\.\d{3})*(?:,\d{1,2})?|(?<![\d.,])\d{1,3}(?:\.\d{3})*,\d{2}(?![\d,])|(?<!\d)\d+(?:[.,]\d+)?\s?(?:reais|mil reais)\b/gi;
+  const phone = /(?<![\d\w])(?:\+?55[\s-]?)?(?:\(?\d{2}\)?[\s-]?)?9?\s?\d{4}[\s-]?\d{4}(?!\d)/g;
+  const code = /(?<![\d/:\[])\d{4,}(?![\d/])/g;
+  const norm = t => t.toLowerCase().normalize('NFD').replace(/\p{M}+/gu, '');
+  const urgency = /\b(urgente|urgencia|imediat\w*|agora|hoje|ate amanha|24 ?h|bloquead\w*|suspens\w*|cancelad\w*|ultimo aviso|ultimo dia|prazo|expira\w*|rapido)\b/;
+  const pix = /\b(pix|transfer\w*|deposit\w*|boleto|pagar|pague|pagamento|taxa|emprest\w*|chave)\b/;
+  const codeReq = /\b(senha|token)\b|\bcodigo\b.{0,40}\b(envi\w*|mand\w*|pass\w*|inform\w*|digit\w*|fal\w*|confirm\w*|repass\w*)\b|\b(envi\w*|mand\w*|pass\w*|inform\w*|repass\w*)\b.{0,40}\bcodigo\b/;
+  return (text, sender) => {
+    const signals = new Set();
+    let out = text.replace(email, '[EMAIL]');
+    out = out.replace(url, (m, host) => {
+      host = host.toLowerCase().replace(/^www\./, '');
+      if (shorteners.has(host)) signals.add('SHORTENED_LINK');
+      return `[LINK:${host}]`;
+    });
+    out = out.replace(cpf, '[CPF]').replace(money, '[VALOR]');
+    out = out.replace(phone, m => (m.match(/\d/g) || []).length >= 8 ? '[TELEFONE]' : m);
+    out = out.replace(code, '[CODIGO]').replace(/[ \t]+/g, ' ').trim().slice(0, 1000);
+    const n = norm(text);
+    if (urgency.test(n)) signals.add('URGENCY');
+    if (pix.test(n)) signals.add('PIX_REQUEST');
+    if (codeReq.test(n)) signals.add('CODE_REQUEST');
+    const digits = (sender.match(/\d/g) || []).length;
+    signals.add(digits >= 4 && /^[\d +\-().]+$/.test(sender) ? 'UNKNOWN_SENDER' : 'SAVED_CONTACT');
+    return {text: out, signals: [...signals]};
+  };
+})();
+
+async function api(token, method, path, body) {
+  let res;
+  try {
+    res = await fetch(API + path, {
+      method,
+      headers: {...(body ? {'Content-Type': 'application/json'} : {}), ...(token ? {Authorization: 'Bearer ' + token} : {})},
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw Object.assign(new Error('Sem conexão com o servidor do Sina. Tente de novo.'), {code: 'NETWORK'});
+  }
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw Object.assign(new Error(data?.error?.message || 'Algo deu errado. Tente de novo.'), {code: data?.error?.code, status: res.status});
+  return data;
+}
+
+function Phone(el) {
+  el.innerHTML = `<div class="status"><span class="clk">${clock()}</span><i></i><span>${icon('message', '#fff', 14, 2.2).replace('<svg', '<svg style="opacity:0"')}</span></div><div class="view"></div>
+    <div class="banner" role="status"><span class="app"></span><span class="grow"><span class="bt"></span><span class="bh"></span><span class="bb"></span></span></div>
+    <div class="toast" role="status"></div>`;
+  const view = el.querySelector('.view'), banner = el.querySelector('.banner'), toast = el.querySelector('.toast');
+  setInterval(() => el.querySelector('.clk').textContent = clock(), 15000);
+  let bannerTimer, toastTimer, onBanner = null;
+  banner.addEventListener('click', () => { banner.classList.remove('show'); onBanner?.(); });
+  return {
+    render(html) { view.innerHTML = html; return view; },
+    view,
+    banner({app, appBg, title, head, body, ms = 3200, onClick = null}) {
+      banner.querySelector('.app').innerHTML = app;
+      banner.querySelector('.app').style.background = appBg;
+      banner.querySelector('.bt').textContent = title;
+      banner.querySelector('.bh').textContent = head;
+      banner.querySelector('.bb').textContent = body;
+      onBanner = onClick;
+      banner.classList.add('show');
+      clearTimeout(bannerTimer);
+      bannerTimer = setTimeout(() => banner.classList.remove('show'), ms);
+    },
+    toast(text, ms = 3000) {
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
+    },
+  };
+}
+
+const topbar = (title, closeIcon = false) =>
+  `<div class="topbar"><button class="iconbtn" data-act="back" aria-label="${closeIcon ? 'Fechar' : 'Voltar'}">${icon(closeIcon ? 'close' : 'back', '#fff')}</button><span>${esc(title)}</span></div>`;
+const brand = `<div class="brand">${LOGO}Sina</div>`;
+const verdictBadge = (v, size = 40, iconSize = 22) =>
+  `<span class="badge ${v === 'SCAM' ? 'scam' : 'sus'}" style="width:${size}px;height:${size}px;border-radius:${size / 2}px">${icon(v === 'SCAM' ? 'warning' : 'alert', v === 'SCAM' ? '#93000A' : '#7A4F00', iconSize)}</span>`;
+const bind = (root, handlers) => root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', e => handlers[b.dataset.act]?.(e, b)));
+const visible = () => !document.hidden;
+
+const P = {
+  phone: Phone(document.getElementById('phone-p')),
+  token: null, alerts: [], guardians: [], screen: 'welcome', scamIndex: 0, normalIndex: 0, busy: false, pairCode: null,
+
+  async start() {
+    try {
+      const r = await api(null, 'POST', '/v1/devices', {role: 'PROTECTED', displayName: 'Dona Maria'});
+      this.token = r.deviceToken;
+      await api(this.token, 'POST', '/v1/devices/me/heartbeat', {listenerEnabled: true});
+      setInterval(() => this.token && visible() && api(this.token, 'POST', '/v1/devices/me/heartbeat', {listenerEnabled: true}).catch(() => {}), 60000);
+      setInterval(() => this.poll(), 4000);
+      this.show('home');
+    } catch (e) { this.phone.toast(e.message); this.show('welcome'); }
+  },
+
+  async poll() {
+    if (!this.token || !visible()) return;
+    try {
+      const r = await api(this.token, 'GET', '/v1/pairings');
+      const names = r.items.map(i => i.guardian?.displayName || 'Familiar');
+      const added = names.filter(n => !this.guardians.includes(n));
+      this.guardians = names;
+      if (added.length) {
+        this.phone.toast(`${added.join(' e ')} agora recebe os avisos de golpe.`);
+        if (this.screen === 'code' || this.screen === 'home') this.show('home');
+      }
+    } catch {}
+  },
+
+  show(screen, arg) {
+    this.screen = screen;
+    const v = this[screen](arg);
+    bind(v, this.handlers);
+  },
+
+  handlers: {
+    start: (e, b) => { b.disabled = true; b.innerHTML = '<span class="spinner"></span>'; P.start(); },
+    simulate: () => P.simulate(SCAMS[P.scamIndex++ % SCAMS.length]),
+    normal: () => P.simulate(NORMALS[P.normalIndex++ % NORMALS.length]),
+    link: () => P.openCode(),
+    newcode: () => P.openCode(),
+    back: () => P.show('home'),
+    open: (e, b) => P.show('alert', P.alerts[+b.dataset.i]),
+  },
+
+  welcome() {
+    return this.phone.render(`
+      <div class="hero" style="padding-top:40px;align-items:flex-start">${BIGLOGO}
+        <h1>Pessoa protegida</h1>
+        <p>Neste celular chegam as mensagens. O Sina confere SMS e WhatsApp e avisa quando uma mensagem parece golpe.</p></div>
+      <div class="sheet"><div style="font-size:21px;font-weight:500;padding:0 8px">Bem-vindo ao Sina</div>
+        <div class="empty" style="padding-top:0">Sem cadastro e sem senha. Nesta demonstração a pessoa protegida se chama Dona Maria.</div>
+        <span class="grow"></span>
+        <button class="btn" data-act="start">Ativar proteção</button></div>`);
+  },
+
+  home() {
+    const sub = this.guardians.length ? `${this.guardians.join(' e ')} recebe os avisos de golpe.` : 'Ligue um familiar para ele receber os avisos de golpe.';
+    const list = this.alerts.length
+      ? `<div class="card">${this.alerts.map((a, i) => `<button class="row" data-act="open" data-i="${i}">${verdictBadge(a.verdict)}<span class="grow"><span class="t">${a.verdict === 'SCAM' ? 'Golpe' : 'Cuidado'}: ${esc(label(a.scamType))}</span><br><span class="s">${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></span><span class="time">${hhmm(a.at)}</span></button>`).join('')}</div>`
+      : `<div class="empty">Nenhum aviso ainda. Toque em <b>Simular golpe</b> para ver o Sina em ação.</div>`;
+    return this.phone.render(`${brand}
+      <div class="hero" style="padding-top:8px"><span class="pill" style="background:var(--ok-bg);color:var(--ok-fg)">${icon('check', '#00210E', 16, 2.4)}Proteção ativa</span>
+        <h1>Conferindo SMS e WhatsApp</h1><p>${esc(sub)}</p></div>
+      <div class="sheet"><span class="section">Avisos recentes</span>${list}
+        <span class="grow"></span>
+        <button class="btn" data-act="simulate" ${this.busy ? 'disabled' : ''}>${this.busy ? '<span class="spinner"></span>Conferindo mensagem…' : icon('warning', '#FF7A1A', 22, 2.2) + 'Simular golpe'}</button>
+        <button class="btn plain" data-act="normal" ${this.busy ? 'disabled' : ''}>Simular mensagem normal</button>
+        <button class="btn outline" data-act="link">${icon('personAdd', '#2A2C30', 22, 2.2)}Ligar familiar</button></div>`);
+  },
+
+  async openCode() {
+    try {
+      this.pairCode = await api(this.token, 'POST', '/v1/pairing-codes');
+      this.show('code');
+    } catch (e) { this.phone.toast(e.message); }
+  },
+
+  code() {
+    const c = this.pairCode.code;
+    return this.phone.render(`${topbar('Ligar familiar')}
+      <div class="hero" style="padding-top:4px"><p>No celular do familiar (ao lado), toque em <b style="color:#fff;font-weight:500">Continuar</b> e digite este código.</p></div>
+      <div class="sheet" style="align-items:center;text-align:center">
+        <span class="section" style="margin-top:20px">Código para o familiar</span>
+        <div class="codebox" aria-label="Código ${esc(c.split('').join(' '))}">${esc(c.slice(0, 3))}&nbsp;${esc(c.slice(3))}</div>
+        <span class="pill" style="align-self:center;background:var(--orange-light);color:var(--text)">${icon('clock', '#1A1B21', 16)}Expira às ${hhmm(this.pairCode.expiresAt)} · uso único</span>
+        <span class="grow"></span>
+        <button class="btn outline" data-act="newcode">Gerar novo código</button></div>`);
+  },
+
+  alert(a) {
+    const scam = a.verdict === 'SCAM';
+    const told = this.guardians.length ? `<span class="pill" style="background:var(--selected);color:var(--text)">${icon('bell', '#1A1B21', 16)}Aviso enviado para ${esc(this.guardians.join(' e '))}</span>` : '';
+    return this.phone.render(`${topbar('Aviso', true)}
+      <div class="hero" style="padding-top:4px;gap:14px">${verdictBadge(a.verdict, 68, 38)}
+        <h1 style="font-size:${scam ? 38 : 34}px;line-height:${scam ? 46 : 42}px">${scam ? 'Isso é golpe.' : 'Cuidado, pode ser golpe.'}</h1>
+        <p class="big">${esc(a.elderlyMessage)}</p></div>
+      <div class="sheet"><div class="msgcard"><small>${a.source === 'WHATSAPP' ? 'Mensagem do WhatsApp' : 'SMS'} · ${hhmm(a.at)}</small><p>${esc(DESC[a.scamType] || 'Mensagem com sinais de golpe.')}</p></div>
+        ${told}<span class="grow"></span>
+        <button class="btn" data-act="back">${scam ? 'Entendi, não vou pagar' : 'Entendi'}</button></div>`);
+  },
+
+  async simulate(msg) {
+    if (this.busy) return;
+    this.busy = true;
+    this.show('home');
+    const app = msg.source === 'WHATSAPP' ? icon('message', '#fff', 18) : icon('message', '#fff', 18);
+    this.phone.banner({app, appBg: msg.source === 'WHATSAPP' ? '#25D366' : '#1A73E8', title: msg.source === 'WHATSAPP' ? 'WhatsApp · agora' : 'Mensagens · agora', head: msg.from, body: msg.text, ms: 2600});
+    try {
+      const a = Anon(msg.text, msg.from);
+      const [r] = await Promise.all([
+        api(this.token, 'POST', '/v1/analyze', {source: msg.source, text: a.text, localSignals: a.signals, receivedAt: new Date().toISOString(), messageCount: 1}),
+        sleep(2600),
+      ]);
+      this.busy = false;
+      if (r.verdict === 'SAFE') {
+        this.show('home');
+        this.phone.toast('O Sina conferiu: mensagem normal. Nenhum aviso foi dado.', 3600);
+        return;
+      }
+      const alert = {...r, source: msg.source, at: Date.now()};
+      this.alerts.unshift(alert);
+      this.show('home');
+      this.phone.banner({app: icon('shield', '#fff', 18), appBg: '#2A2C30', title: 'Sina · agora', head: r.verdict === 'SCAM' ? 'Isso é golpe' : 'Cuidado, pode ser golpe', body: r.elderlyMessage, ms: 2200, onClick: () => this.show('alert', alert)});
+      await sleep(1400);
+      if (this.screen === 'home') this.show('alert', alert);
+    } catch (e) {
+      this.busy = false;
+      this.show('home');
+      this.phone.toast(e.code === 'RATE_LIMITED' ? 'Muitas simulações seguidas. Espere um minuto e tente de novo.' : e.message, 4000);
+    }
+  },
+};
+
+const G = {
+  phone: Phone(document.getElementById('phone-g')),
+  token: null, people: [], alerts: [], seen: new Set(), screen: 'signup', tab: 'people', first: true,
+
+  show(screen, arg) {
+    this.screen = screen;
+    const v = this[screen](arg);
+    bind(v, this.handlers);
+    return v;
+  },
+
+  handlers: {
+    signup: async (e, b) => {
+      const v = G.phone.view, name = v.querySelector('#gname').value.trim();
+      if (!name) { v.querySelector('.err').textContent = 'Digite seu nome.'; return; }
+      b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+      try {
+        const r = await api(null, 'POST', '/v1/devices', {role: 'GUARDIAN', displayName: name.slice(0, 80)});
+        G.token = r.deviceToken;
+        setInterval(() => G.poll(), 4000);
+        G.show('pair');
+      } catch (err) { b.disabled = false; b.textContent = 'Continuar'; v.querySelector('.err').textContent = err.message; }
+    },
+    pair: async (e, b) => {
+      const v = G.phone.view, code = v.querySelector('#gcode').value.replace(/\D/g, '');
+      const err = v.querySelector('.err');
+      if (code.length !== 6) { err.textContent = 'O código tem 6 números.'; return; }
+      b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+      try {
+        await api(G.token, 'POST', '/v1/pairings', {code});
+        await G.poll(true);
+        G.tab = 'people';
+        G.show('home');
+        G.phone.toast('Pronto! Você vai receber os avisos de golpe.');
+      } catch (x) {
+        b.disabled = false; b.textContent = 'Ligar';
+        err.textContent = {PAIRING_CODE_NOT_FOUND: 'Código não encontrado. Confira os números.', PAIRING_CODE_EXPIRED: 'Este código expirou. Gere um novo no outro celular.', ALREADY_PAIRED: 'Vocês já estão ligados.'}[x.code] || x.message;
+      }
+    },
+    add: () => G.show('pair', true),
+    back: () => G.show('home'),
+    tab: (e, b) => { G.tab = b.dataset.tab; G.show('home'); },
+    detail: (e, b) => G.show('detail', G.alerts.find(a => a.id === b.dataset.id)),
+  },
+
+  async poll(force) {
+    if (!this.token || (!visible() && !force)) return;
+    try {
+      const [p, a] = await Promise.all([api(this.token, 'GET', '/v1/pairings'), api(this.token, 'GET', '/v1/alerts?limit=30')]);
+      const before = JSON.stringify([this.people, this.alerts.map(x => x.id)]);
+      this.people = p.items.map(i => ({id: i.protected?.deviceId, name: i.protected?.displayName || 'Pessoa protegida', status: i.protected?.protectionStatus}));
+      this.alerts = a.items;
+      const fresh = this.alerts.filter(x => !this.seen.has(x.id));
+      fresh.forEach(x => this.seen.add(x.id));
+      if (!this.first && fresh.length) {
+        const x = fresh[0];
+        this.phone.banner({app: icon('shield', '#fff', 18), appBg: '#2A2C30', title: 'Sina · agora', head: x.verdict === 'SCAM' ? 'Alerta de golpe' : 'Alerta de suspeita', body: `${this.nameOf(x.protectedDeviceId)} recebeu ${x.verdict === 'SCAM' ? 'um golpe' : 'uma mensagem suspeita'} de ${label(x.scamType)}.`, ms: 5000, onClick: () => this.show('detail', x)});
+      }
+      this.first = false;
+      if (this.screen === 'home' && before !== JSON.stringify([this.people, this.alerts.map(x => x.id)])) this.show('home');
+    } catch {}
+  },
+
+  nameOf(id) { return this.people.find(p => p.id === id)?.name || 'Pessoa protegida'; },
+
+  signup() {
+    return this.phone.render(`
+      <div class="hero" style="padding-top:40px">${BIGLOGO}<h1>Familiar</h1>
+        <p>Neste celular chegam os alertas quando a pessoa protegida recebe uma mensagem de golpe.</p></div>
+      <div class="sheet"><div class="field"><label for="gname">Seu nome</label><input id="gname" value="Ana" maxlength="80" autocomplete="off"></div>
+        <div class="err" aria-live="polite"></div>
+        <div class="note">${icon('bell', '#1A1B21', 22)}<span>Seu nome aparece para a pessoa protegida. Use um nome fictício nesta demonstração.</span></div>
+        <span class="grow"></span><button class="btn" data-act="signup">Continuar</button></div>`);
+  },
+
+  pair(canBack) {
+    const v = this.phone.render(`${canBack ? topbar('Proteger alguém') : '<div style="height:60px"></div>'}
+      <div class="hero" style="padding-top:4px"><h1 style="font-size:30px;line-height:36px">Digite o código</h1>
+        <p>No celular da pessoa protegida (ao lado), toque em <b style="color:#fff;font-weight:500">Ligar familiar</b> para ver o código de 6 números.</p></div>
+      <div class="sheet"><div class="field"><label for="gcode">Código de 6 números</label><input id="gcode" class="code" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••••"></div>
+        <div class="err" aria-live="polite"></div>
+        <div class="empty">No app também dá para escanear o QR code do outro celular com a câmera.</div>
+        <span class="grow"></span><button class="btn" data-act="pair">Ligar</button></div>`);
+    const input = v.querySelector('#gcode');
+    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); });
+    input.addEventListener('keydown', e => e.key === 'Enter' && v.querySelector('[data-act="pair"]').click());
+    return v;
+  },
+
+  nav() {
+    const today = this.alerts.filter(a => sameDay(a.createdAt, Date.now())).length;
+    const item = (tab, ic, text, dot) => `<button role="tab" data-act="tab" data-tab="${tab}" aria-selected="${this.tab === tab}"><span class="ind">${icon(ic, this.tab === tab ? '#1A1B21' : '#44474F', 22)}</span>${text}${dot ? `<span class="dot">${dot}</span>` : ''}</button>`;
+    return `<nav class="nav" role="tablist">${item('people', 'shield', 'Pessoas')}${item('alerts', 'bell', 'Alertas', today)}</nav>`;
+  },
+
+  home() {
+    if (this.tab === 'alerts') return this.alertsTab();
+    const today = this.alerts.filter(a => a.verdict === 'SCAM' && sameDay(a.createdAt, Date.now()));
+    const summary = !this.people.length ? 'Ninguém ligado ainda.'
+      : today.length ? `${today.length} ${today.length > 1 ? 'golpes' : 'golpe'} hoje` : `${this.people.length} ${this.people.length > 1 ? 'pessoas' : 'pessoa'} · nenhum golpe hoje`;
+    const cards = this.people.map(p => {
+      const last = this.alerts.find(a => a.protectedDeviceId === p.id && sameDay(a.createdAt, Date.now()));
+      const active = p.status !== 'INACTIVE';
+      return `<div class="person"><div class="head"><span class="avatar">${esc(p.name.charAt(0).toUpperCase())}</span>
+        <span class="grow"><span style="font-size:17px;font-weight:500">${esc(p.name)}</span><br>
+        <span class="pill" style="margin-top:6px;height:26px;background:${active ? 'var(--ok-bg)' : 'none'};color:${active ? 'var(--ok-fg)' : 'var(--muted)'};${active ? '' : 'border:1px solid var(--neutral)'}"><span style="width:8px;height:8px;border-radius:4px;background:${active ? 'var(--ok-dot)' : 'var(--neutral)'}"></span>${active ? 'Ativa' : 'Inativa'}</span></span></div>
+        ${last ? `<button class="foot" data-act="detail" data-id="${esc(last.id)}">${icon('warning', '#410002', 18)}${last.verdict === 'SCAM' ? 'Golpe' : 'Suspeita'} hoje às ${hhmm(last.createdAt)} · ${esc(label(last.scamType))}</button>` : ''}</div>`;
+    }).join('');
+    return this.phone.render(`${brand}
+      <div class="hero" style="padding-top:8px"><h1>Pessoas protegidas</h1><p>${esc(summary)}</p></div>
+      <div class="sheet">${cards || '<div class="empty">Ninguém ligado ainda.</div>'}<span class="grow"></span>
+        <button class="btn" data-act="add">${icon('plus', '#FF7A1A', 22, 2.4)}Proteger alguém</button></div>${this.nav()}`);
+  },
+
+  alertsTab() {
+    let lastDay = null;
+    const rows = this.alerts.map(a => {
+      const day = new Date(a.createdAt).toLocaleDateString('pt-BR', {weekday: 'long', day: 'numeric', month: 'short'}).toUpperCase();
+      const header = day !== lastDay ? `<div class="section" style="padding:14px 20px 6px">${esc(day)}</div>` : '';
+      lastDay = day;
+      return `${header}<button class="row" style="align-items:flex-start;padding:12px 20px" data-act="detail" data-id="${esc(a.id)}">${verdictBadge(a.verdict)}
+        <span class="grow"><span class="t">${a.verdict === 'SCAM' ? 'Golpe' : 'Suspeita'} · ${esc(cap(label(a.scamType)))}</span><br>
+        ${a.familySummary ? `<span class="s" style="font-size:13.5px;line-height:19px">${esc(a.familySummary)}</span><br>` : ''}
+        <span class="s" style="font-size:12px">${esc(this.nameOf(a.protectedDeviceId))} · ${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></span>
+        <span class="time">${hhmm(a.createdAt)}</span></button>`;
+    }).join('');
+    return this.phone.render(`${brand}<div class="hero" style="padding-top:8px"><h1>Alertas</h1></div>
+      <div class="sheet flat">${rows || '<div class="empty" style="padding:6px 24px">Nenhum alerta por aqui.</div>'}</div>${this.nav()}`);
+  },
+
+  detail(a) {
+    if (!a) return this.show('home');
+    const scam = a.verdict === 'SCAM', person = this.nameOf(a.protectedDeviceId);
+    return this.phone.render(`${topbar(scam ? 'Alerta de golpe' : 'Alerta de suspeita')}
+      <div class="hero" style="padding-top:6px;gap:10px">
+        <span class="pill" style="background:${scam ? 'var(--scam-bg)' : 'var(--sus-bg)'};color:${scam ? 'var(--scam-fg)' : 'var(--sus-fg)'}">${icon(scam ? 'warning' : 'alert', scam ? '#410002' : '#2B1700', 16)}${scam ? 'Golpe' : 'Suspeita'} · ${Math.round(a.confidence * 100)}% de certeza</span>
+        <h1>${esc(cap(label(a.scamType)))}</h1>${a.familySummary ? `<p>${esc(a.familySummary)}</p>` : ''}</div>
+      <div class="sheet" style="gap:16px"><div class="card">
+          <div class="info"><span>Pessoa</span><span>${esc(person)}</span></div>
+          <div class="info"><span>Recebida por</span><span>${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></div>
+          <div class="info"><span>Quando</span><span>${whenLabel(a.createdAt)}</span></div></div>
+        ${a.messageExcerpt ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="section">Trecho da mensagem</span><div class="excerpt">${esc(a.messageExcerpt)}</div><span class="s" style="font-size:12px;color:var(--muted);padding:0 4px">Nomes, valores e números foram removidos no celular de ${esc(person)}.</span></div>` : ''}
+        <div style="display:flex;flex-direction:column;gap:8px"><span class="section">O que fazer</span><ol class="todo">
+          <li>Ligue para ${esc(person)} e confirme que não houve pagamento nem envio de código.</li>
+          <li>Se houve pagamento por Pix, peça ao banco a devolução pelo MED do Pix.</li></ol></div></div>`);
+  },
+};
+
+P.show('welcome');
+G.show('signup');
+
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('.col').forEach(c => c.classList.toggle('active', c.id === 'col-' + b.dataset.col));
+}));
+</script>
+</body>
+</html>
