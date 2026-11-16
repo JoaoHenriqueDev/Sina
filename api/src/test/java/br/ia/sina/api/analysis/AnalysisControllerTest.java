@@ -118,7 +118,7 @@ class AnalysisControllerTest {
     }
 
     private String register(String role) throws Exception {
-        return mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"" + role + "\"}"))
+        return mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"" + role + "\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
     }

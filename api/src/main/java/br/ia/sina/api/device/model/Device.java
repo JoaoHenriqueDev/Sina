@@ -40,6 +40,9 @@ public class Device {
     @Column(length = 254)
     private String email;
 
+    @Column(length = 13)
+    private String phone;
+
     @Column(nullable = false, unique = true, length = 64)
     private String tokenHash;
 

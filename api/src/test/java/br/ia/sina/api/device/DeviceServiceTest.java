@@ -38,18 +38,19 @@ class DeviceServiceTest {
             return d;
         });
 
-        RegisterResponse response = service.register(new RegisterRequest(DeviceRole.GUARDIAN, "fcm", "Ana", "ana@exemplo.com"));
+        RegisterResponse response = service.register(new RegisterRequest(DeviceRole.GUARDIAN, "fcm", "Ana", "ana@exemplo.com", "(11) 98765-4321"));
 
         ArgumentCaptor<Device> saved = ArgumentCaptor.forClass(Device.class);
         verify(repository).save(saved.capture());
         assertThat(response.deviceId()).isEqualTo(id);
         assertThat(saved.getValue().getTokenHash()).isEqualTo(tokenService.hash(response.deviceToken()));
         assertThat(saved.getValue().getTokenHash()).isNotEqualTo(response.deviceToken());
+        assertThat(saved.getValue().getPhone()).isEqualTo("11987654321");
     }
 
     @Test
-    void emailEmProtectedEhRecusado() {
-        assertThatThrownBy(() -> service.register(new RegisterRequest(DeviceRole.PROTECTED, null, null, "a@b.com")))
+    void telefoneSemDddEhRecusado() {
+        assertThatThrownBy(() -> service.register(new RegisterRequest(DeviceRole.PROTECTED, null, "Maria", "maria@teste.com.br", "98765-432")))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(ErrorCode.VALIDATION_ERROR));
         verify(repository, never()).save(any());
     }

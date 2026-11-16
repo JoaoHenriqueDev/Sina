@@ -113,10 +113,10 @@ public class PairingService {
     private static PeerDevice protectedPeer(Device d, Instant now) {
         Instant lastSeen = d.getLastSeenAt();
         boolean active = lastSeen != null && lastSeen.isAfter(now.minus(INACTIVE_AFTER));
-        return new PeerDevice(d.getId(), d.getDisplayName(), active ? ProtectionStatus.ACTIVE : ProtectionStatus.INACTIVE, lastSeen);
+        return new PeerDevice(d.getId(), d.getDisplayName(), active ? ProtectionStatus.ACTIVE : ProtectionStatus.INACTIVE, lastSeen, d.getPhone());
     }
 
     private static PeerDevice guardianPeer(Device d) {
-        return new PeerDevice(d.getId(), d.getDisplayName(), null, null);
+        return new PeerDevice(d.getId(), d.getDisplayName(), null, null, d.getPhone());
     }
 }
