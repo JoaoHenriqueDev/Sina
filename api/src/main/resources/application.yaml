@@ -27,3 +27,4 @@ firebase:
 
 sina:
   device-token-pepper: ${DEVICE_TOKEN_PEPPER:}
+  cors-origins: ${CORS_ORIGINS:https://joaohenriquedev.github.io}
