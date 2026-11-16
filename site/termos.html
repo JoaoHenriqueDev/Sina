@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Termos de uso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1B1D20;--surface:#2A2C30;--raise:#34363B;--line:#45474D;--fg:#F3F3F6;--muted:#B2B4BC;--orange:#FF7A1A;--orange-soft:#FFB27A;--danger:#FF6458;--ok:#62D69A;
+--f-display:'Bricolage Grotesque','Arial Narrow',system-ui,sans-serif;--f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--f-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-top:env(safe-area-inset-top,0px)}
+h1,h2,h3,p,ul,ol{margin:0}a{color:var(--orange-soft)}a:hover{color:#fff}
+:focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:6px}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(27,29,32,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--f-display);font-weight:800;font-size:22px;text-decoration:none;color:var(--fg)}
+.tile{display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border-radius:28%;width:36px;height:36px}.tile svg{width:76%;height:76%}
+.pill{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:19px;background:var(--orange);color:#1F1100;font-size:14px;font-weight:600;text-decoration:none}
+.pill:hover{background:#ff8c38;color:#1F1100}
+.head{padding-block:clamp(40px,7vw,88px) 8px;display:grid;gap:14px}
+.eyebrow{font-family:var(--f-mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange-soft)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(38px,7vw,68px);line-height:1;letter-spacing:-.03em;text-wrap:balance}
+.lead{color:var(--muted);font-size:clamp(17px,2vw,20px);max-width:56ch}
+.meta{font-size:14px;color:var(--muted)}
+.doc{padding-block:32px 72px;display:grid;gap:12px}
+.doc h2{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.2vw,32px);line-height:1.15;letter-spacing:-.015em;margin-top:36px;text-wrap:balance}
+.doc h3{font-family:var(--f-display);font-weight:700;font-size:20px;margin-top:12px}
+.doc p,.doc li{max-width:68ch}.doc ul,.doc ol{padding-left:22px;display:grid;gap:6px}
+.doc li::marker{color:var(--orange)}
+.toc{background:var(--surface);border-radius:24px;padding:20px 24px;box-shadow:inset 0 0 0 1px var(--line);display:grid;gap:6px;margin-block:12px}
+.toc b{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange-soft);font-weight:500}
+.toc ol{padding-left:20px;display:grid;gap:4px;font-size:16px}
+.box{background:var(--surface);border-radius:24px;padding:22px 24px;box-shadow:inset 0 0 0 1px var(--line);display:grid;gap:8px;margin-block:8px}
+.box.warn{box-shadow:inset 0 0 0 1.5px var(--orange)}
+.box strong{font-family:var(--f-display);font-size:19px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tw{overflow-x:auto;border-radius:20px;box-shadow:inset 0 0 0 1px var(--line);margin-block:8px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px}
+th,td{text-align:left;vertical-align:top;padding:12px 16px;border-bottom:1px solid var(--line)}
+th{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--orange-soft);font-weight:500;background:var(--surface)}
+tr:last-child td{border-bottom:0}
+details{background:var(--surface);border-radius:20px;box-shadow:inset 0 0 0 1px var(--line);margin-block:4px}
+summary{cursor:pointer;list-style:none;padding:16px 20px;font-weight:600;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}summary::after{content:"+";font-size:24px;line-height:1;color:var(--orange);flex:none}
+details[open] summary::after{content:"–"}details>div{padding:0 20px 18px;display:grid;gap:8px;color:var(--muted)}
+details>div b{color:var(--fg)}
+.mail{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.mail code{font-family:var(--f-mono);font-size:16px;background:var(--bg);padding:8px 12px;border-radius:12px;user-select:all;overflow-wrap:anywhere}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border-radius:23px;border:0;font:600 15px var(--f-body);cursor:pointer;background:var(--orange);color:#1F1100;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--line)}.btn.ghost:hover{background:var(--raise);color:var(--fg)}
+.btn:hover{background:#ff8c38;color:#1F1100}
+footer{border-top:1px solid var(--line);padding-block:36px 56px;color:var(--muted);font-size:14.5px}
+footer .wrap{display:grid;gap:14px}footer nav{display:flex;flex-wrap:wrap;gap:8px 22px}footer nav a{color:var(--fg);text-decoration:none}footer nav a:hover{color:var(--orange-soft);text-decoration:underline}
+@media (max-width:700px){.grid2{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style></head><body>
+<header class="top"><div class="wrap"><a class="brand" href="./" aria-label="Sina, página inicial"><span class="tile"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="7" y="27" width="50" height="35" rx="11" fill="#1A1B1E"/><path d="M45.5 20C45.5 13 38.9 9.5 32 9.5C25.1 9.5 18.5 13.5 18.5 20C18.5 27.5 25.1 30 32 32.5C38.9 35 45.5 37.5 45.5 45C45.5 51.5 38.9 55.5 32 55.5C25.1 55.5 18.5 52 18.5 45" fill="none" stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="2" fill="#FF7A1A"/><path d="M32 44.5v3.2" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round"/></svg></span>Sina</a><a class="pill" href="https://demo.sina.ia.br" target="_blank" rel="noopener">Ver a demo</a></div></header>
+<main class="wrap"><div class="head"><p class="eyebrow">Termos</p><h1>Termos de uso</h1><p class="lead">As regras para usar o Sina, em português simples.</p><p class="meta">Atualizado em 16 de novembro de 2026</p></div>
+<div class="doc">
+<div class="box warn"><strong>Em uma frase</strong><span>O Sina ajuda a perceber golpes, mas não garante que todos sejam detectados. Use junto com seu bom senso e proteja apenas quem sabe e concorda.</span></div>
+
+<h2>1. Aceite</h2>
+<p>Ao instalar ou usar o Sina, você concorda com estes termos e com a <a href="privacidade.html">Política de privacidade</a>. Se não concordar, não use o app.</p>
+
+<h2>2. O que é o Sina</h2>
+<p>O Sina é um app para Android que lê notificações de SMS e WhatsApp, analisa o texto anonimizado e avisa a pessoa protegida e, em caso de golpe, o familiar vinculado. O Sina <b>avisa</b>; ele não responde mensagens, não bloqueia contatos e não faz pagamentos.</p>
+
+<h2>3. Quem pode usar</h2>
+<ul><li>Você precisa ser maior de 18 anos ou ter autorização de um responsável.</li>
+<li>Pessoa protegida: ativa o Sina no próprio celular, concorda com a leitura das notificações e decide quem é o familiar vinculado.</li>
+<li>Familiar: só deve ligar-se a uma pessoa que sabe e concorda em ser protegida. É proibido usar o Sina para vigiar alguém sem consentimento.</li></ul>
+
+<h2>4. Conta e vínculos</h2>
+<p>Você informa nome, e-mail e telefone no cadastro e se compromete a dar dados verdadeiros. O vínculo entre pessoa protegida e familiar é feito por um código de 6 dígitos, de uso único e válido por 10 minutos. Qualquer um dos dois pode desfazer o vínculo a qualquer momento.</p>
+
+<h2>5. Uso aceitável</h2>
+<p>Não é permitido: usar o Sina para fins ilegais; tentar burlar, desmontar ou sobrecarregar o serviço; enviar dados falsos de propósito para gerar alertas; copiar o app ou sua marca sem autorização.</p>
+
+<h2>6. Limites do serviço</h2>
+<ul><li>A análise usa inteligência artificial e pode errar: deixar passar um golpe ou marcar como suspeita uma mensagem verdadeira.</li>
+<li>O Sina depende de internet, das permissões do Android e de o celular não restringir o app. Se a proteção parar, o familiar é avisado, mas pode haver um intervalo sem proteção.</li>
+<li>O Sina não substitui a atenção da pessoa nem a orientação de bancos e autoridades. Em caso de golpe ou pagamento indevido, siga as orientações da <a href="suporte.html#golpe">página de suporte</a>.</li>
+<li>Na medida permitida pela lei, e sem afastar os direitos que o Código de Defesa do Consumidor lhe garante, não nos responsabilizamos por perdas causadas por golpes que o Sina não detectou ou por falhas fora do nosso controle.</li></ul>
+
+<h2>7. Disponibilidade e mudanças</h2>
+<p>Podemos atualizar, suspender ou encerrar funções do Sina, avisando com antecedência razoável quando a mudança afetar a proteção. Podemos alterar estes termos; as mudanças relevantes serão avisadas no app.</p>
+
+<h2>8. Propriedade intelectual</h2>
+<p>O nome Sina, a logo e o app pertencem aos seus criadores. Você recebe uma licença pessoal, limitada e revogável para usar o app conforme estes termos.</p>
+
+<h2>9. Encerramento</h2>
+<p>Você pode parar de usar o Sina e <a href="excluir-conta.html">excluir sua conta</a> quando quiser. Podemos suspender contas que violem estes termos.</p>
+
+<h2>10. Lei aplicável e contato</h2>
+<p>Estes termos seguem as leis do Brasil. Dúvidas: <a href="mailto:suporte@sina.ia.br">suporte@sina.ia.br</a>.</p>
+</div></main>
+<footer><div class="wrap"><nav aria-label="Páginas do Sina"><a href="privacidade.html">Política de privacidade</a><a href="termos.html">Termos de uso</a><a href="excluir-conta.html">Excluir conta e dados</a><a href="suporte.html">Suporte e contato</a><a href="ajuda.html">Ajuda</a></nav><span>Sina · protege quem você ama de golpes por SMS e WhatsApp.</span></div></footer></body></html>
