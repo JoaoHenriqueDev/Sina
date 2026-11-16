@@ -2,6 +2,7 @@ package br.ia.sina.api.device.dto;
 
 import br.ia.sina.api.device.role.DeviceRole;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,8 +17,9 @@ public final class DeviceDtos {
     public record RegisterRequest(
             @NotNull DeviceRole role,
             @Size(max = 4096) String fcmToken,
-            @Size(max = 80) String displayName,
-            @Email @Size(max = 254) String email) {
+            @NotBlank @Size(max = 80) String displayName,
+            @NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Pattern(regexp = "\\+?[\\d ().-]{10,20}") String phone) {
     }
 
     public record RegisterResponse(UUID deviceId, String deviceToken) {

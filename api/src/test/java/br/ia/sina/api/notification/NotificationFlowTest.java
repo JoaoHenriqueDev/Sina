@@ -96,8 +96,8 @@ class NotificationFlowTest {
     @Test
     @SuppressWarnings("unchecked")
     void golpeEnviaPushEEmailComCategoriaETrecho() throws Exception {
-        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Dona Rosa\"}");
-        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"email\":\"familia@example.com\"}");
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Dona Rosa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"email\":\"familia@teste.com.br\",\"displayName\":\"Ana\",\"phone\":\"11987654321\"}");
         pair(idoso, familiar);
 
         String alertId = analyze(idoso);
@@ -122,7 +122,7 @@ class NotificationFlowTest {
                 .containsKey("createdAt");
 
         ArgumentCaptor<EmailContent> mail = ArgumentCaptor.forClass(EmailContent.class);
-        verify(email).send(anyString(), eq("familia@example.com"), mail.capture());
+        verify(email).send(anyString(), eq("familia@teste.com.br"), mail.capture());
         assertThat(mail.getValue().subject()).isEqualTo("Alerta Sina: possível golpe contra Dona Rosa");
         assertThat(mail.getValue().html())
                 .contains("Falso parente")
@@ -135,8 +135,8 @@ class NotificationFlowTest {
     void tokenInvalidoEApagadoEEmailComFalhaFicaFailed() throws Exception {
         when(push.send(anyString(), anyMap())).thenReturn(PushResult.INVALID_TOKEN);
         doThrow(new RestClientException("Resend fora")).when(email).send(anyString(), anyString(), any());
-        Device idoso = register("{\"role\":\"PROTECTED\"}");
-        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-velho\",\"email\":\"familia@example.com\"}");
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-velho\",\"email\":\"familia@teste.com.br\",\"displayName\":\"Ana\",\"phone\":\"11987654321\"}");
         pair(idoso, familiar);
 
         String alertId = analyze(idoso);
@@ -150,8 +150,9 @@ class NotificationFlowTest {
 
     @Test
     void familiarSemCanalNaoENotificado() throws Exception {
-        Device idoso = register("{\"role\":\"PROTECTED\"}");
-        Device familiar = register("{\"role\":\"GUARDIAN\"}");
+        when(email.enabled()).thenReturn(false);
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
         pair(idoso, familiar);
 
         String body = mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + idoso.token())
@@ -168,14 +169,15 @@ class NotificationFlowTest {
 
     @Test
     void familiarQuePareiaDepoisEAvisadoNaReanaliseSemDuplicarAlertaNemEntrega() throws Exception {
-        Device idoso = register("{\"role\":\"PROTECTED\"}");
+        when(email.enabled()).thenReturn(false);
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
         String first = JsonPath.read(mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + idoso.token())
                         .contentType(MediaType.APPLICATION_JSON).content(analyzeBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.guardianNotified").value(false))
                 .andReturn().getResponse().getContentAsString(), "$.alertId");
 
-        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"displayName\":\"Ana\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
         pair(idoso, familiar);
         String second = analyze(idoso);
         mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + idoso.token())
@@ -192,11 +194,24 @@ class NotificationFlowTest {
     }
 
     @Test
+    void emailDeDominioReservadoNaoEEnviado() throws Exception {
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"displayName\":\"Ana\",\"email\":\"ana@example.com\",\"phone\":\"11987654321\"}");
+        pair(idoso, familiar);
+
+        String alertId = analyze(idoso);
+
+        assertThat(deliveryRepository.findByAlertIdOrderByCreatedAt(UUID.fromString(alertId)))
+                .extracting(AlertDelivery::getChannel).containsExactly(DeliveryChannel.PUSH);
+        verify(email, never()).send(anyString(), anyString(), any());
+    }
+
+    @Test
     void canaisDesligadosNaoGeramEntrega() throws Exception {
         when(push.enabled()).thenReturn(false);
         when(email.enabled()).thenReturn(false);
-        Device idoso = register("{\"role\":\"PROTECTED\"}");
-        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"email\":\"familia@example.com\"}");
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"email\":\"familia@teste.com.br\",\"displayName\":\"Ana\",\"phone\":\"11987654321\"}");
         pair(idoso, familiar);
 
         mvc.perform(post("/v1/analyze").header("Authorization", "Bearer " + idoso.token())

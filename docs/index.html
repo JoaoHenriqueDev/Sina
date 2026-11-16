@@ -8,13 +8,14 @@
 <meta name="description" content="Demonstração do Sina: celular da pessoa protegida e do familiar lado a lado, ligados à API real.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
 :root{
   --page:#E4E4E7;--page-text:#1A1B21;--page-muted:#44474F;--page-card:#FFFFFF;--page-border:#D4D4DA;
   --dark:#2A2C30;--raised:#3A3C42;--sheet:#FAF9FF;--card:#FFFFFF;--border:#E2E2EA;--text:#1A1B21;--muted:#44474F;
-  --sub:#D4D4D8;--sub-strong:#E8E8EC;--orange:#FF7A1A;--orange-light:#FFE9DA;--neutral:#757780;
-  --scam-bg:#FFDAD6;--scam-fg:#410002;--scam-icon:#93000A;--sus-bg:#FFE3B0;--sus-fg:#2B1700;--sus-icon:#7A4F00;
-  --ok-bg:#C9F0D4;--ok-fg:#00210E;--ok-dot:#1E8E3E;--selected:#EEEDF4;
+  --sub:#D4D4D8;--sub-strong:#E8E8EC;--orange:#FF7A1A;--orange-light:#FFE9DA;--neutral:#757780;--outline:#C5C6D0;
+  --scam-bg:#FFDAD6;--scam-fg:#410002;--sus-bg:#FFE3B0;--sus-fg:#2B1700;
+  --ok-bg:#C9F0D4;--ok-fg:#00210E;--ok-dot:#1B6D3A;--selected:#EEEDF4;--error:#BA1A1A;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){--page:#0F1013;--page-text:#E8E8EC;--page-muted:#A9ABB3;--page-card:#1A1B1F;--page-border:#2E3036}
@@ -23,15 +24,16 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--page);color:var(--page-text);font-family:Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 button,input{font:inherit}
+button{cursor:pointer}
 .page{max-width:980px;margin:0 auto;padding:32px 16px 48px}
 .intro{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px}
 .intro h1{margin:0 0 6px;font-size:28px;line-height:34px;font-weight:500}
-.intro p{margin:0;color:var(--page-muted);font-size:15px;line-height:22px;max-width:640px}
+.intro p{margin:0;color:var(--page-muted);font-size:15px;line-height:22px;max-width:660px}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 28px;padding:0;list-style:none}
 .steps li{background:var(--page-card);border:1px solid var(--page-border);border-radius:16px;padding:14px 16px;font-size:14px;line-height:20px;color:var(--page-muted)}
 .steps b{display:block;color:var(--page-text);font-weight:500;margin-bottom:2px}
 .tabs{display:none;gap:8px;margin-bottom:16px}
-.tabs button{flex:1;height:44px;border-radius:22px;border:1px solid var(--page-border);background:var(--page-card);color:var(--page-text);font-weight:500;cursor:pointer}
+.tabs button{flex:1;height:44px;border-radius:22px;border:1px solid var(--page-border);background:var(--page-card);color:var(--page-text);font-weight:500}
 .tabs button[aria-selected="true"]{background:#2A2C30;color:#fff;border-color:#2A2C30}
 .phones{display:flex;gap:40px;justify-content:center;align-items:flex-start}
 .col{display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -43,42 +45,51 @@ button,input{font:inherit}
 .view{flex:1;display:flex;flex-direction:column;min-height:0}
 .topbar{height:60px;flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 4px}
 .topbar span{font-size:21px}
-.iconbtn{width:48px;height:48px;border-radius:24px;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
+.iconbtn{width:48px;height:48px;border-radius:24px;border:0;background:none;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .iconbtn:hover{background:rgba(255,255,255,.08)}
-.brand{height:60px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 24px;font-size:21px;font-weight:500}
+.brand{height:60px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 4px 0 24px;font-size:21px;font-weight:500}
+.brand .grow{display:flex;align-items:center;gap:10px}
 .hero{padding:10px 24px 28px;display:flex;flex-direction:column;gap:12px}
 .hero h1{margin:0;font-size:32px;line-height:38px;font-weight:500}
 .hero p{margin:0;font-size:15px;line-height:23px;color:var(--sub)}
 .hero p.big{font-size:18px;line-height:27px;color:var(--sub-strong)}
+.hero b{color:#fff;font-weight:500}
 .sheet{flex:1;min-height:0;overflow-y:auto;background:var(--sheet);color:var(--text);border-radius:36px 36px 0 0;padding:26px 16px 20px;display:flex;flex-direction:column;gap:14px}
-.sheet.flat{padding:20px 0 12px;gap:0}
+.sheet.flat{padding:16px 0 12px;gap:0}
 .section{padding:0 8px;font-size:12.5px;font-weight:500;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
-.row{display:flex;align-items:center;gap:14px;padding:12px 16px;min-height:68px;border:0;background:none;width:100%;text-align:left;color:var(--text);cursor:pointer}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.row{display:flex;align-items:center;gap:14px;padding:12px 16px;min-height:68px;border:0;background:none;width:100%;text-align:left;color:var(--text)}
 .row+.row{border-top:1px solid var(--border)}
-.row:hover{background:#F5F4FA}
+button.row:hover{background:#F5F4FA}
 .row .t{font-size:15.5px;font-weight:500;line-height:21px}
 .row .s{font-size:13px;line-height:18px;color:var(--muted)}
 .row .time{margin-left:auto;font-size:12px;color:var(--muted);align-self:flex-start;padding-top:3px}
-.grow{flex:1}
+.grow{flex:1;min-width:0}
 .badge{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .scam{background:var(--scam-bg)}.sus{background:var(--sus-bg)}
-.btn{height:54px;border-radius:27px;border:0;background:var(--dark);color:#fff;font-size:16.5px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;cursor:pointer;flex-shrink:0}
-.btn:disabled{opacity:.45;cursor:default}
+.btn{height:54px;border-radius:27px;border:0;background:var(--dark);color:#fff;font-size:16.5px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;flex-shrink:0;padding:0 20px}
+.btn:disabled{opacity:.4;cursor:default}
 .btn.outline{background:none;border:2px solid var(--dark);color:var(--dark)}
-.btn.plain{background:none;color:var(--text);height:44px;font-size:15px}
-.pill{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border-radius:15px;font-size:13.5px;font-weight:500}
+.btn.plain{background:none;color:var(--text);height:46px;font-size:15.5px}
+.btn.plain:hover{background:rgba(0,0,0,.04)}
+.btn.small{width:auto;height:46px;font-size:15.5px}
+.pill{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;border-radius:15px;font-size:13.5px;font-weight:500;white-space:nowrap}
 .empty{padding:6px 8px;color:var(--muted);font-size:14.5px;line-height:21px}
-.field{display:flex;flex-direction:column;gap:6px}
+.form{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:4px}
 .field label{font-size:13px;color:var(--muted);padding-left:4px}
-.field input{height:54px;border-radius:12px;border:1px solid #757780;padding:0 16px;font-size:16px;background:none;color:var(--text);outline:none}
+.field input{height:52px;border-radius:12px;border:1px solid var(--neutral);padding:0 16px;font-size:16px;background:none;color:var(--text);outline:none;width:100%}
 .field input:focus{border:2px solid var(--dark);padding:0 15px}
-.field input.code{font-family:"Roboto Mono",monospace;font-size:24px;letter-spacing:8px;text-align:center}
-.err{color:#BA1A1A;font-size:13.5px;line-height:19px;padding:0 4px}
-.codebox{font-family:"Roboto Mono",monospace;font-size:42px;letter-spacing:6px;text-align:center;color:var(--text);margin:8px 0 4px}
-.note{background:var(--orange-light);border-radius:16px;padding:14px 16px;font-size:13.5px;line-height:20px;color:var(--text);display:flex;gap:12px}
-.msgcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
-.msgcard small{font-size:12.5px;color:var(--muted)}
+.field small{font-size:12px;color:var(--muted);padding-left:16px;line-height:16px}
+.field input.code{font-family:"Roboto Mono",monospace;font-size:22px;letter-spacing:6px;text-align:center}
+.err{color:var(--error);font-size:13.5px;line-height:19px;padding:0 4px}
+.err:empty{display:none}
+.codebox{font-family:"Roboto Mono",monospace;font-size:40px;letter-spacing:6px;text-align:center;color:var(--text);margin:2px 0}
+.qr{background:#fff;border-radius:24px;padding:18px;border:1px solid var(--border);align-self:center;line-height:0}
+.qr svg{width:180px;height:180px}
+.note{background:var(--orange-light);border-radius:16px;padding:14px 16px;font-size:13.5px;line-height:20px;color:var(--text);display:flex;gap:12px;flex-shrink:0}
+.msgcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.msgcard small{font-size:12.5px;color:var(--muted);font-weight:500}
 .msgcard p{margin:0;font-size:15px;line-height:22px}
 .excerpt{background:var(--selected);border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:21px}
 .info{display:flex;justify-content:space-between;gap:12px;padding:13px 16px;font-size:14.5px}
@@ -86,25 +97,75 @@ button,input{font:inherit}
 .info span:first-child{color:var(--muted)}
 ol.todo{margin:0;padding:0 4px 0 24px;font-size:14.5px;line-height:21px;display:flex;flex-direction:column;gap:6px}
 .nav{flex-shrink:0;height:72px;background:#fff;border-top:1px solid var(--border);display:flex}
-.nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;position:relative}
+.nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:500;color:var(--muted);position:relative}
 .nav .ind{width:60px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
 .nav button[aria-selected="true"]{color:var(--text)}
 .nav button[aria-selected="true"] .ind{background:var(--orange-light)}
-.nav .dot{position:absolute;top:10px;left:calc(50% + 8px);min-width:16px;height:16px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px}
-.person{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.nav .dot{position:absolute;top:10px;left:calc(50% + 8px);min-width:16px;height:16px;border-radius:8px;background:var(--error);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.person{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;flex-shrink:0}
 .person .head{display:flex;align-items:center;gap:14px;padding:16px}
 .avatar{width:46px;height:46px;border-radius:23px;background:var(--orange-light);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:500;flex-shrink:0}
-.person .foot{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--scam-bg);color:var(--scam-fg);font-size:13.5px;font-weight:500;border:0;width:100%;text-align:left;cursor:pointer}
-.banner{position:absolute;left:10px;right:10px;top:40px;z-index:5;background:#F2F1F7;color:var(--text);border-radius:22px;padding:12px 14px;display:flex;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.28);transform:translateY(calc(-100% - 60px));visibility:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),visibility 0s .35s;cursor:pointer}
+.person .foot{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:13.5px;font-weight:500;border:0;width:100%;text-align:left}
+.person .foot .grow{flex:1}
+.radio{display:flex;align-items:center;gap:14px;padding:16px;border-radius:20px;border:1px solid var(--outline);background:#fff;text-align:left;width:100%;color:var(--text)}
+.radio.on{border:2px solid var(--dark);background:var(--selected);padding:15px}
+.radio:disabled{opacity:.55;cursor:not-allowed}
+.radio .dot{width:20px;height:20px;border-radius:10px;border:2px solid var(--neutral);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.radio.on .dot{border-color:var(--dark)}
+.radio.on .dot::after{content:"";width:10px;height:10px;border-radius:5px;background:var(--dark)}
+.radio b{display:block;font-size:16px;font-weight:500;line-height:22px}
+.radio span.s{font-size:13.5px;line-height:19px;color:var(--muted)}
+.consent{display:flex;gap:14px;align-items:flex-start}
+.consent .c-ic{width:36px;height:36px;border-radius:18px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.consent b{display:block;font-size:15px;font-weight:500;line-height:21px}
+.consent span{font-size:13.5px;line-height:19px;color:var(--muted)}
+.check{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;background:var(--selected);font-size:14.5px;cursor:pointer;user-select:none}
+.check input{width:20px;height:20px;accent-color:var(--dark);margin:0}
+.link{color:var(--text);font-size:14px;font-weight:500;text-decoration:underline;padding:0 8px;background:none;border:0;text-align:left;align-self:flex-start}
+.stepnum{width:36px;height:36px;border-radius:18px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-weight:500;flex-shrink:0}
+.setlist{display:flex;flex-direction:column}
+.set-h{padding:16px 24px 8px;font-size:12.5px;font-weight:500;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}
+.set-i{display:flex;align-items:center;gap:16px;padding:12px 24px;min-height:64px;border:0;background:none;width:100%;text-align:left;color:var(--text)}
+button.set-i:hover{background:rgba(0,0,0,.03)}
+.set-i .t{font-size:16px;line-height:22px}
+.set-i .s{font-size:13px;line-height:18px;color:var(--muted)}
+.set-div{height:1px;background:var(--border);margin:8px 0}
+.set-act{background:none;border:0;color:var(--error);font-weight:500;font-size:14.5px;padding:10px 8px;border-radius:20px}
+.switch{width:52px;height:32px;border-radius:16px;border:2px solid var(--neutral);background:var(--selected);position:relative;flex-shrink:0;transition:.15s}
+.switch::after{content:"";position:absolute;top:6px;left:6px;width:16px;height:16px;border-radius:8px;background:var(--neutral);transition:.15s}
+.switch.on{background:var(--orange);border-color:var(--orange)}
+.switch.on::after{left:24px;top:2px;width:24px;height:24px;border-radius:12px;background:#fff}
+.chips{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto;flex-shrink:0}
+.chip{height:36px;border-radius:18px;border:1px solid var(--neutral);background:none;color:var(--muted);font-size:14px;font-weight:500;padding:0 14px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.chip.on{background:var(--dark);border-color:var(--dark);color:#fff;padding-left:10px}
+.camera{width:220px;height:220px;margin:6px auto 22px;border-radius:24px;background:#1A1B1E;position:relative;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13.5px;line-height:19px;color:var(--sub);padding:28px;flex-shrink:0}
+.camera svg{position:absolute;inset:0}
+.center{align-items:center;justify-content:center;text-align:center}
+.overlay{position:absolute;inset:0;z-index:8;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;padding:22px}
+.dialog{background:#F2F0F7;color:var(--text);border-radius:28px;padding:24px;width:100%;display:flex;flex-direction:column;gap:14px}
+.dialog h3{margin:0;font-size:21px;font-weight:400;line-height:28px}
+.dialog p{margin:0;font-size:14.5px;line-height:21px;color:var(--muted)}
+.dialog .acts{display:flex;justify-content:flex-end;gap:4px;margin-top:4px}
+.dialog .acts button{background:none;border:0;font-weight:500;font-size:14.5px;padding:10px 14px;border-radius:20px;color:var(--text)}
+.dialog .acts button.danger{color:var(--error)}
+.dialog.system{text-align:center;align-items:center}
+.dialog.system .acts{flex-direction:column;width:100%;gap:8px}
+.dialog.system .acts button{width:100%;height:44px;border-radius:22px;background:#E3E1EC}
+.dialog.system .acts button.primary{background:#3F5F90;color:#fff}
+.banner{position:absolute;left:10px;right:10px;top:40px;z-index:6;background:#F2F1F7;color:var(--text);border-radius:22px;padding:12px 14px;display:flex;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.28);transform:translateY(calc(-100% - 60px));visibility:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),visibility 0s .35s;cursor:pointer}
 .banner.show{transform:none;visibility:visible;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
 .banner .app{width:34px;height:34px;border-radius:17px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .banner .bt{display:block;font-size:12px;color:var(--muted)}
 .banner .bh{display:block;font-size:14px;font-weight:500;line-height:19px}
 .banner .bb{font-size:13.5px;line-height:19px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.toast{position:absolute;left:16px;right:16px;bottom:22px;z-index:5;background:#2F3036;color:#F2F0F4;border-radius:14px;padding:12px 16px;font-size:13.5px;line-height:19px;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
+.toast{position:absolute;left:16px;right:16px;bottom:22px;z-index:9;background:#2F3036;color:#F2F0F4;border-radius:14px;padding:12px 16px;font-size:13.5px;line-height:19px;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
 .toast.show{opacity:1;transform:none}
 .spinner{width:18px;height:18px;border:2.4px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.dots{display:flex;gap:6px;align-items:center}
+.dots i{width:8px;height:8px;border-radius:4px;background:#6B6D75}
+.dots i.on{width:26px;background:var(--orange)}
+.illus{width:100%;max-width:300px;height:auto;align-self:center}
 .footer{margin-top:32px;font-size:13.5px;line-height:20px;color:var(--page-muted);text-align:center}
 .footer a{color:inherit}
 @media (max-width:860px){
@@ -117,7 +178,7 @@ ol.todo{margin:0;padding:0 4px 0 24px;font-size:14.5px;line-height:21px;display:
   .col h2{display:none}
   .phone{width:100%;max-width:380px;height:760px}
 }
-@media (prefers-reduced-motion:reduce){.banner,.toast{transition:none}.spinner{animation:none}}
+@media (prefers-reduced-motion:reduce){.banner,.toast,.switch,.switch::after{transition:none}.spinner{animation:none}}
 </style>
 </head>
 <body>
@@ -126,12 +187,12 @@ ol.todo{margin:0;padding:0 4px 0 24px;font-size:14.5px;line-height:21px;display:
     <svg width="52" height="52" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#2A2C30"/><rect x="7" y="27" width="50" height="35" rx="11" fill="#1A1B1E"/><path d="M45.5 20C45.5 13 38.9 9.5 32 9.5C25.1 9.5 18.5 13.5 18.5 20C18.5 27.5 25.1 30 32 32.5C38.9 35 45.5 37.5 45.5 45C45.5 51.5 38.9 55.5 32 55.5C25.1 55.5 18.5 52 18.5 45" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="2" fill="#FF7A1A"/><path d="M32 44.5v3.2" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round"/></svg>
     <div>
       <h1>Sina: demonstração</h1>
-      <p>Dois celulares simulados lado a lado, ligados à API real do Sina. A análise é feita de verdade pela IA. Todos os nomes e mensagens são fictícios.</p>
+      <p>Os dois celulares do Sina lado a lado, com todas as telas do app, ligados à API real. A análise das mensagens é feita de verdade pela IA. Nomes, e-mails, telefones e mensagens são fictícios.</p>
     </div>
   </header>
   <ol class="steps">
-    <li><b>1. Ative a proteção</b>No celular da pessoa protegida, toque em Ativar proteção.</li>
-    <li><b>2. Ligue o familiar</b>No celular do familiar, cadastre-se e digite o código de 6 números.</li>
+    <li><b>1. Configure os dois celulares</b>Siga as telas de boas-vindas, aceite a privacidade e confira o cadastro em cada celular.</li>
+    <li><b>2. Ligue o familiar</b>Na pessoa protegida, toque em Ligar familiar. No familiar, digite o código de 6 números.</li>
     <li><b>3. Simule um golpe</b>Toque em Simular golpe e veja o aviso nos dois celulares.</li>
   </ol>
   <div class="tabs" role="tablist">
@@ -142,35 +203,76 @@ ol.todo{margin:0;padding:0 4px 0 24px;font-size:14.5px;line-height:21px;display:
     <section class="col active" id="col-p"><h2>Pessoa protegida</h2><div class="phone"><div class="screen" id="phone-p"></div></div></section>
     <section class="col" id="col-g"><h2>Familiar</h2><div class="phone"><div class="screen" id="phone-g"></div></div></section>
   </div>
-  <p class="footer">No app, a mensagem chega pela notificação do SMS ou do WhatsApp; aqui o botão simula essa chegada. Antes do envio, nomes, valores, números e links são trocados por marcadores, como no app.<br><a href="https://github.com/JoaoHenriqueDev/Sina">Código no GitHub</a></p>
+  <p class="footer">No app, a mensagem chega pela notificação do SMS ou do WhatsApp; aqui o botão Simular golpe faz essa chegada. Antes do envio, nomes, valores, números e links são trocados por marcadores, como no app.<br>As permissões do Android são simuladas. Ao desligar o acesso às notificações, o familiar vê a proteção desligada na hora; no app, isso aparece após 30 minutos sem sinal.<br><a href="https://github.com/JoaoHenriqueDev/Sina">Código no GitHub</a></p>
 </main>
 <script>
 const API = (new URLSearchParams(location.search).get('api') || 'https://sinaapimobile.sina.ia.br').replace(/\/$/, '');
+const PRIVACY_URL = 'https://sina.ia.br/privacidade';
+const VERSION = '0.1.0';
 
+const circle = (cx, cy, r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+const rect = (x, y, w, h, r) => `M${x + r} ${y}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a${r} ${r} 0 0 1 ${-r} ${-r}v${-(h - 2 * r)}a${r} ${r} 0 0 1 ${r} ${-r}z`;
 const ICON = {
   back: ['M20 12H4', 'M10 6l-6 6 6 6'],
   close: ['M6 6l12 12', 'M18 6L6 18'],
+  arrow: ['M4 12h16', 'M14 6l6 6-6 6'],
+  chevron: ['M9 6l6 6-6 6'],
   check: ['M20 6L9 17l-5-5'],
   plus: ['M12 5v14', 'M5 12h14'],
   warning: ['M12 3L2 20h20L12 3z', 'M12 10v4', 'M12 17v.5'],
-  alert: ['M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0', 'M12 8v5', 'M12 16.5v.5'],
-  clock: ['M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0', 'M12 7v5l3 2'],
+  alert: [circle(12, 12, 9), 'M12 8v5', 'M12 16.5v.5'],
+  clock: [circle(12, 12, 9), 'M12 7v5l3 2'],
   bell: ['M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8', 'M10 20a2 2 0 0 0 4 0'],
+  bellOff: ['M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8', 'M3 3l18 18'],
   shield: ['M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z'],
-  personAdd: ['M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0', 'M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6', 'M19 8v6M16 11h6'],
+  gear: [circle(12, 12, 3), 'M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1'],
+  lock: [rect(4, 10, 16, 11, 2), 'M8 10V7a4 4 0 0 1 8 0v3'],
+  sparkle: ['M12 2l2.4 5.6L20 10l-5.6 2.4L12 18l-2.4-5.6L4 10l5.6-2.4z'],
+  noDatabase: ['M4 6a8 3 0 1 0 16 0a8 3 0 1 0-16 0', 'M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6', 'M3 3l18 18'],
+  battery: [rect(2, 7, 18, 10, 2), 'M22 11v2', 'M6 10v4'],
+  noWifi: ['M2 8.5a15 15 0 0 1 20 0', 'M5 12a10 10 0 0 1 14 0', 'M3 3l18 18'],
+  personAdd: [circle(9, 8, 3.5), 'M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6', 'M19 8v6M16 11h6'],
+  phone: ['M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z'],
   message: ['M4 5h16v11H8l-4 4z'],
 };
-const icon = (name, color, size = 24, stroke = 2) =>
-  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name].map(d => `<path d="${d}"/>`).join('')}</svg>`;
-const LOGO = `<svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="7" y="27" width="50" height="35" rx="11" fill="#1A1B1E"/><path d="M45.5 20C45.5 13 38.9 9.5 32 9.5C25.1 9.5 18.5 13.5 18.5 20C18.5 27.5 25.1 30 32 32.5C38.9 35 45.5 37.5 45.5 45C45.5 51.5 38.9 55.5 32 55.5C25.1 55.5 18.5 52 18.5 45" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="2" fill="#FF7A1A"/><path d="M32 44.5v3.2" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round"/></svg>`;
-const BIGLOGO = LOGO.replace('width="34" height="34"', 'width="80" height="80"');
+const icon = (name, color, size = 24, stroke = 2, extra = '') =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name].map(d => `<path d="${d}"/>`).join('')}${extra}</svg>`;
+const logo = size => `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="7" y="27" width="50" height="35" rx="11" fill="#1A1B1E"/><path d="M45.5 20C45.5 13 38.9 9.5 32 9.5C25.1 9.5 18.5 13.5 18.5 20C18.5 27.5 25.1 30 32 32.5C38.9 35 45.5 37.5 45.5 45C45.5 51.5 38.9 55.5 32 55.5C25.1 55.5 18.5 52 18.5 45" stroke="#fff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="2" fill="#FF7A1A"/><path d="M32 44.5v3.2" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round"/></svg>`;
 
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ILLUS = [
+  `<svg class="illus" viewBox="0 0 320 280" role="img" aria-label="Mensagem de golpe sinalizada pelo Sina"><rect x="24" y="24" width="190" height="52" rx="18" fill="#3A3C42"/><rect x="44" y="42" width="120" height="8" rx="4" fill="#6B6D75"/><rect x="44" y="58" width="80" height="8" rx="4" fill="#6B6D75"/><rect x="50" y="106" width="230" height="84" rx="20" fill="#463525" stroke="#FF7A1A" stroke-width="2.5"/><rect x="72" y="128" width="170" height="8" rx="4" fill="#7A6A5C"/><rect x="72" y="146" width="140" height="8" rx="4" fill="#7A6A5C"/><rect x="72" y="164" width="100" height="8" rx="4" fill="#7A6A5C"/><circle cx="272" cy="106" r="24" fill="#FF7A1A"/><path d="M272 94l-11 19h22z" fill="none" stroke="#2A2C30" stroke-width="3" stroke-linejoin="round"/><path d="M272 101v5M272 110v.5" stroke="#2A2C30" stroke-width="3" stroke-linecap="round"/><rect x="24" y="214" width="150" height="44" rx="16" fill="#3A3C42"/><rect x="44" y="232" width="100" height="8" rx="4" fill="#6B6D75"/></svg>`,
+  `<svg class="illus" viewBox="0 0 320 280" role="img" aria-label="Celular protegido avisando o celular de um familiar"><rect x="22" y="50" width="96" height="180" rx="20" fill="#3A3C42" stroke="#FF7A1A" stroke-width="2.5"/><g transform="translate(70 130)"><path d="M0 -18l16 6v12c0 9-7 16.5-16 18-9-1.5-16-9-16-18v-12z" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/><path d="M-7 0l5 5 9-10" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><rect x="202" y="50" width="96" height="180" rx="20" fill="#3A3C42" stroke="#FF7A1A" stroke-width="2.5"/><rect x="214" y="84" width="72" height="48" rx="10" fill="#463525" stroke="#FF7A1A" stroke-width="2"/><rect x="224" y="96" width="44" height="6" rx="3" fill="#7A6A5C"/><rect x="224" y="110" width="32" height="6" rx="3" fill="#7A6A5C"/><rect x="214" y="148" width="72" height="8" rx="4" fill="#6B6D75"/><rect x="214" y="164" width="52" height="8" rx="4" fill="#6B6D75"/><path d="M118 140h22M180 140h22" stroke="#FF7A1A" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 7"/><circle cx="160" cy="140" r="22" fill="#FF7A1A"/><g transform="translate(160 140)" fill="none" stroke="#2A2C30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M-7 4c0-5 1-10 7-10s7 5 7 10l2 2h-18z"/><path d="M-2 10a2 2 0 0 0 4 0"/></g></svg>`,
+  `<svg class="illus" viewBox="0 0 320 280" role="img" aria-label="Mensagem com nome, valor e código trocados por marcadores"><rect x="20" y="50" width="280" height="180" rx="22" fill="#3A3C42" stroke="#6B6D75" stroke-width="2"/><rect x="42" y="78" width="60" height="8" rx="4" fill="#6B6D75"/><rect x="112" y="68" width="78" height="28" rx="8" fill="#FF7A1A"/><text x="151" y="87" text-anchor="middle" font-family="Roboto, sans-serif" font-size="13" font-weight="500" fill="#2A2C30">[NOME]</text><rect x="200" y="78" width="60" height="8" rx="4" fill="#6B6D75"/><rect x="42" y="118" width="90" height="8" rx="4" fill="#6B6D75"/><rect x="142" y="108" width="84" height="28" rx="8" fill="#FF7A1A"/><text x="184" y="127" text-anchor="middle" font-family="Roboto, sans-serif" font-size="13" font-weight="500" fill="#2A2C30">[VALOR]</text><rect x="236" y="118" width="44" height="8" rx="4" fill="#6B6D75"/><rect x="42" y="158" width="70" height="8" rx="4" fill="#6B6D75"/><rect x="122" y="148" width="96" height="28" rx="8" fill="#FF7A1A"/><text x="170" y="167" text-anchor="middle" font-family="Roboto, sans-serif" font-size="13" font-weight="500" fill="#2A2C30">[CÓDIGO]</text><rect x="228" y="158" width="50" height="8" rx="4" fill="#6B6D75"/><rect x="42" y="196" width="150" height="8" rx="4" fill="#6B6D75"/></svg>`,
+];
+const ONBOARDING = [
+  ['Golpe não passa batido', 'O Sina confere SMS e WhatsApp e avisa quando uma mensagem parece golpe.'],
+  ['Sua família sabe na hora', 'Um familiar recebe o aviso assim que um golpe chega, para ajudar sem demora.'],
+  ['Seus dados ficam com você', 'Nomes, valores e códigos viram marcadores antes da análise. Nenhuma mensagem é guardada.'],
+];
+const CONSENT = [
+  ['personAdd', 'Seu cadastro', 'Nome, e-mail e telefone ficam guardados no Sina para identificar você e ligar seu familiar.'],
+  ['lock', 'Dados das mensagens ficam no celular', 'Nomes, números, valores e códigos são trocados por marcadores antes do envio.'],
+  ['sparkle', 'Análise por inteligência artificial', 'O texto anonimizado é analisado pela OpenAI, que não o guarda.'],
+  ['bell', 'Seu familiar é avisado', 'Em caso de golpe, ele recebe o tipo, um resumo e um trecho sem dados pessoais, por notificação (Firebase, do Google) e e-mail (Resend).'],
+  ['noDatabase', 'Nada de texto guardado', 'Guardamos só o resultado da análise, nunca a mensagem.'],
+];
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const hhmm = d => new Date(d).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
 const clock = () => hhmm(Date.now());
 const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
-const whenLabel = d => sameDay(d, Date.now()) ? `Hoje, ${hhmm(d)}` : `${new Date(d).toLocaleDateString('pt-BR')}, ${hhmm(d)}`;
+const dmy = d => new Date(d).toLocaleDateString('pt-BR');
+const whenLabel = d => sameDay(d, Date.now()) ? `Hoje, ${hhmm(d)}` : `${dmy(d)}, ${hhmm(d)}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const joinNames = n => n.length <= 1 ? (n[0] || '') : `${n.slice(0, -1).join(', ')} e ${n[n.length - 1]}`;
+const phoneDigits = s => { const d = String(s || '').replace(/\D/g, ''); return d.length >= 10 && d.length <= 13 ? d : null; };
+const fmtPhone = d => {
+  if (!d) return '';
+  const local = d.length > 11 ? d.slice(-11) : d;
+  const f = local.length === 11 ? `(${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7)}` : `(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+  return d.length > 11 ? `+${d.slice(0, d.length - 11)} ${f}` : f;
+};
+const emailOk = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
 const LABEL = {
   FALSE_RELATIVE: 'falso parente', FALSE_BANK: 'falsa central do banco', FALSE_DELIVERY: 'falsa entrega',
@@ -190,6 +292,7 @@ const DESC = {
 };
 const label = t => LABEL[t] || 'mensagem suspeita';
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const titleFor = v => v === 'SCAM' ? 'Isso é golpe.' : 'Cuidado, pode ser golpe.';
 
 const SCAMS = [
   {source: 'WHATSAPP', from: '+55 11 98765-4321', text: 'Oi mãe, mudei de número, salva esse aqui. Preciso pagar um boleto hoje e meu app do banco travou. Consegue me fazer um Pix de R$ 1.850,00? Amanhã te devolvo.'},
@@ -203,7 +306,7 @@ const NORMALS = [
 ];
 
 const Anon = (() => {
-  const shorteners = new Set(['bit.ly','tinyurl.com','cutt.ly','is.gd','t.co','goo.gl','rb.gy','shorturl.at','tiny.cc','ow.ly','s.id','encurtador.com.br','abre.ai','l1nk.dev','v.gd','t.ly']);
+  const shorteners = new Set(['bit.ly', 'tinyurl.com', 'cutt.ly', 'is.gd', 't.co', 'goo.gl', 'rb.gy', 'shorturl.at', 'tiny.cc', 'ow.ly', 's.id', 'encurtador.com.br', 'abre.ai', 'l1nk.dev', 'v.gd', 't.ly']);
   const TLDS = 'com|br|net|org|info|biz|top|xyz|site|online|link|click|shop|store|app|io|me|ly|co|cc|gd|at|id|ai|dev|live|vip|club|icu|cfd|sbs|lat|pro|gov|edu|us|tk|ml|ga|cf|gq|pw|ws|in|ru|cn|to|gl';
   const email = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
   const url = new RegExp(`\\b(?:https?://)?(?:www\\.)?((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${TLDS}))\\b(?![.\\w-]*@)(?:[/?#][^\\s]*)?`, 'gi');
@@ -245,25 +348,28 @@ async function api(token, method, path, body) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw Object.assign(new Error('Sem conexão com o servidor do Sina. Tente de novo.'), {code: 'NETWORK'});
+    throw Object.assign(new Error('Sem internet. Confira a conexão e tente de novo.'), {code: 'NETWORK'});
   }
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw Object.assign(new Error(data?.error?.message || 'Algo deu errado. Tente de novo.'), {code: data?.error?.code, status: res.status});
+  if (!res.ok) throw Object.assign(new Error(data?.error?.message || 'Não deu certo. Tente de novo.'), {code: data?.error?.code, status: res.status});
   return data;
 }
 
+const DEMO = {inactiveSince: null, protectedId: null};
+const visible = () => !document.hidden;
+
 function Phone(el) {
-  el.innerHTML = `<div class="status"><span class="clk">${clock()}</span><i></i><span>${icon('message', '#fff', 14, 2.2).replace('<svg', '<svg style="opacity:0"')}</span></div><div class="view"></div>
+  el.innerHTML = `<div class="status"><span class="clk">${clock()}</span><i></i><span></span></div><div class="view"></div>
     <div class="banner" role="status"><span class="app"></span><span class="grow"><span class="bt"></span><span class="bh"></span><span class="bb"></span></span></div>
     <div class="toast" role="status"></div>`;
   const view = el.querySelector('.view'), banner = el.querySelector('.banner'), toast = el.querySelector('.toast');
   setInterval(() => el.querySelector('.clk').textContent = clock(), 15000);
   let bannerTimer, toastTimer, onBanner = null;
   banner.addEventListener('click', () => { banner.classList.remove('show'); onBanner?.(); });
-  return {
-    render(html) { view.innerHTML = html; return view; },
+  const ph = {
     view,
+    dialogOpen: false,
     banner({app, appBg, title, head, body, ms = 3200, onClick = null}) {
       banner.querySelector('.app').innerHTML = app;
       banner.querySelector('.app').style.background = appBg;
@@ -281,301 +387,670 @@ function Phone(el) {
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
     },
+    dialog({system = false, iconHtml = '', title, body = '', input = null, actions}) {
+      const o = document.createElement('div');
+      o.className = 'overlay';
+      o.innerHTML = `<div class="dialog ${system ? 'system' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">${iconHtml}<h3>${esc(title)}</h3>${body ? `<p>${body}</p>` : ''}
+        ${input ? `<div class="field"><label for="dlg-in">${esc(input.label)}</label><input id="dlg-in" value="${esc(input.value || '')}" placeholder="${esc(input.placeholder || '')}" maxlength="40" autocomplete="off"></div>` : ''}
+        <div class="acts">${actions.map((a, i) => `<button data-i="${i}" class="${a.kind || ''}">${esc(a.label)}</button>`).join('')}</div></div>`;
+      el.appendChild(o);
+      ph.dialogOpen = true;
+      const close = () => { o.remove(); ph.dialogOpen = false; };
+      o.querySelectorAll('.acts button').forEach(b => b.addEventListener('click', () => {
+        const a = actions[+b.dataset.i];
+        const value = o.querySelector('#dlg-in')?.value;
+        close();
+        a.onClick?.(value);
+      }));
+      (o.querySelector('#dlg-in') || o.querySelector('.acts button.primary') || o.querySelector('.acts button:last-child'))?.focus();
+      return close;
+    },
   };
+  return ph;
 }
 
 const topbar = (title, closeIcon = false) =>
-  `<div class="topbar"><button class="iconbtn" data-act="back" aria-label="${closeIcon ? 'Fechar' : 'Voltar'}">${icon(closeIcon ? 'close' : 'back', '#fff')}</button><span>${esc(title)}</span></div>`;
-const brand = `<div class="brand">${LOGO}Sina</div>`;
+  `<div class="topbar"><button class="iconbtn" data-back aria-label="${closeIcon ? 'Fechar' : 'Voltar'}">${icon(closeIcon ? 'close' : 'back', '#fff')}</button><span>${esc(title)}</span></div>`;
+const brandbar = (gear = false) =>
+  `<div class="brand"><span class="grow">${logo(34)}Sina</span>${gear ? `<button class="iconbtn" data-gear aria-label="Ajustes">${icon('gear', '#fff')}</button>` : ''}</div>`;
 const verdictBadge = (v, size = 40, iconSize = 22) =>
   `<span class="badge ${v === 'SCAM' ? 'scam' : 'sus'}" style="width:${size}px;height:${size}px;border-radius:${size / 2}px">${icon(v === 'SCAM' ? 'warning' : 'alert', v === 'SCAM' ? '#93000A' : '#7A4F00', iconSize)}</span>`;
-const bind = (root, handlers) => root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', e => handlers[b.dataset.act]?.(e, b)));
-const visible = () => !document.hidden;
+const sw = on => `<span class="switch ${on ? 'on' : ''}" aria-hidden="true"></span>`;
+const field = (id, labelText, value, help, type = 'text', extra = '') =>
+  `<div class="field"><label for="${id}">${esc(labelText)}</label><input id="${id}" type="${type}" value="${esc(value)}" autocomplete="off" ${extra}>${help ? `<small id="${id}-help">${esc(help)}</small>` : ''}</div>`;
+const systemIcon = name => `<span style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">${icon(name, '#3F5F90', 28)}</span>`;
+const sinaApp = icon('shield', '#fff', 18);
 
-const P = {
-  phone: Phone(document.getElementById('phone-p')),
-  token: null, alerts: [], guardians: [], screen: 'welcome', scamIndex: 0, normalIndex: 0, busy: false, pairCode: null,
+function makeApp(role, el) {
+  const self = {
+    role, phone: Phone(el), screen: null, arg: null,
+    go(screen, arg) {
+      self.screen = screen;
+      self.arg = arg;
+      const s = self.screens[screen](arg);
+      self.phone.view.innerHTML = s.html;
+      const v = self.phone.view;
+      v.querySelector('[data-back]')?.addEventListener('click', () => s.back?.());
+      v.querySelector('[data-gear]')?.addEventListener('click', () => self.go('settings'));
+      s.mount?.(v);
+    },
+    refresh() {
+      const ae = document.activeElement;
+      if (self.phone.dialogOpen || (ae?.tagName === 'INPUT' && self.phone.view.contains(ae))) return;
+      self.go(self.screen, self.arg);
+    },
+    on(v, sel, fn) { v.querySelectorAll(sel).forEach(b => b.addEventListener('click', e => fn(e, b))); },
+  };
+  return self;
+}
 
-  async start() {
-    try {
-      const r = await api(null, 'POST', '/v1/devices', {role: 'PROTECTED', displayName: 'Dona Maria'});
-      this.token = r.deviceToken;
-      await api(this.token, 'POST', '/v1/devices/me/heartbeat', {listenerEnabled: true});
-      setInterval(() => this.token && visible() && api(this.token, 'POST', '/v1/devices/me/heartbeat', {listenerEnabled: true}).catch(() => {}), 60000);
-      setInterval(() => this.poll(), 4000);
-      this.show('home');
-    } catch (e) { this.phone.toast(e.message); this.show('welcome'); }
+function commonScreens(app, {roleKey, afterRole}) {
+  const other = roleKey === 'PROTECTED' ? 'GUARDIAN' : 'PROTECTED';
+  const cards = {
+    PROTECTED: ['Quero ser protegido', 'O Sina confere as mensagens que chegam neste celular'],
+    GUARDIAN: ['Quero proteger um familiar', 'Você recebe um aviso quando ele receber golpe'],
+  };
+  return {
+    splash: () => ({
+      html: `<div class="hero center" style="flex:1;gap:16px">${logo(136)}<span style="font-size:32px;font-weight:500">Sina</span></div>`,
+      mount: () => setTimeout(() => app.screen === 'splash' && app.go('onboarding', 0), 1300),
+    }),
+    onboarding: i => {
+      const last = i === ONBOARDING.length - 1;
+      return {
+        html: `<div class="hero" style="flex:1;justify-content:flex-end;padding-bottom:24px">${ILLUS[i]}
+            <h1 style="font-size:31px;line-height:37px;margin-top:8px">${ONBOARDING[i][0]}</h1><p>${ONBOARDING[i][1]}</p>
+            <div class="dots" aria-label="Página ${i + 1} de 3">${[0, 1, 2].map(k => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div></div>
+          <div class="sheet" style="flex:0 0 auto;gap:12px;padding-bottom:16px"><div style="padding:0 8px"><div style="font-size:20px;font-weight:500">Bem-vindo ao Sina</div><div style="font-size:14.5px;color:var(--muted);margin-top:2px">Cadastro rápido, sem senha.</div></div>
+            <button class="btn" data-next>${last ? 'Começar' : 'Continuar'}</button>
+            ${last ? '<div style="height:46px"></div>' : `<button class="btn plain small" data-skip style="align-self:flex-end">Pular ${icon('arrow', '#1A1B21', 20)}</button>`}</div>`,
+        mount: v => {
+          app.on(v, '[data-next]', () => last ? app.go('role') : app.go('onboarding', i + 1));
+          app.on(v, '[data-skip]', () => app.go('role'));
+        },
+      };
+    },
+    role: () => ({
+      html: `<div class="hero" style="padding-top:20px">${logo(80)}<h1>Bem-vindo ao Sina</h1>
+          <p>O Sina avisa quando uma mensagem de SMS ou WhatsApp parece golpe. Quem vai usar este celular?</p></div>
+        <div class="sheet" style="gap:12px">
+          <button class="radio on" role="radio" aria-checked="true"><span class="dot"></span><span><b>${cards[roleKey][0]}</b><span class="s">${cards[roleKey][1]}</span></span></button>
+          <button class="radio" role="radio" aria-checked="false" disabled><span class="dot"></span><span><b>${cards[other][0]}</b><span class="s">Nesta demonstração, fica no outro celular.</span></span></button>
+          <span class="grow"></span>
+          <button class="btn" data-next>Continuar</button>
+          <div style="text-align:center;font-size:13px;color:var(--muted)">Cadastro rápido, sem senha. <a href="${PRIVACY_URL}" target="_blank" rel="noopener" style="color:var(--text);font-weight:500">Privacidade</a></div></div>`,
+      mount: v => app.on(v, '[data-next]', afterRole),
+    }),
+    signup: () => {
+      const guardian = roleKey === 'GUARDIAN';
+      const d = app.profile || (guardian
+        ? {displayName: 'Ana', email: 'ana@example.com', phone: '11900000002'}
+        : {displayName: 'Dona Maria', email: 'maria@example.com', phone: '11900000001'});
+      return {
+        html: `${topbar('Seus dados')}
+          <div class="hero" style="padding-top:2px"><p>${guardian ? 'Você recebe uma notificação neste celular e um e-mail quando a pessoa protegida receber um golpe.' : 'Seu familiar vê seu nome quando receber um alerta de golpe deste celular.'}</p></div>
+          <div class="sheet" style="padding:28px 20px 18px"><div class="form">
+            ${field('f-name', 'Seu nome', d.displayName, guardian ? 'Aparece no celular de quem você proteger' : 'Aparece para o familiar que você ligar', 'text', 'maxlength="80"')}
+            ${field('f-email', 'E-mail', d.email, guardian ? 'Também recebe os alertas de golpe. Nada de propaganda.' : 'Só para assuntos da sua conta. Nada de propaganda.', 'email', 'maxlength="254"')}
+            ${field('f-phone', 'Telefone com DDD', fmtPhone(d.phone), 'Ex.: (11) 98765-4321', 'tel', 'maxlength="20"')}
+            <div class="note">${icon('bell', '#1A1B21', 22)}<span>Ao continuar, o Android vai perguntar se o Sina pode enviar notificações. Toque em <b>Permitir</b>.</span></div>
+            <div class="err" aria-live="polite"></div></div>
+            <span class="grow"></span>
+            <div style="font-size:12.5px;color:var(--muted);padding:0 4px">Dados fictícios já preenchidos para a demonstração.</div>
+            <button class="btn" data-next>Continuar</button></div>`,
+        back: () => app.go(guardian ? 'role' : 'consent'),
+        mount: v => app.on(v, '[data-next]', (e, b) => {
+          const name = v.querySelector('#f-name').value.trim();
+          const email = v.querySelector('#f-email').value.trim();
+          const phone = phoneDigits(v.querySelector('#f-phone').value);
+          const err = !name ? 'Digite seu nome.' : !emailOk(email) ? 'Confira o e-mail digitado.' : !phone ? 'Confira o número com DDD.' : '';
+          v.querySelector('.err').textContent = err;
+          if (err) return;
+          app.profile = {displayName: name.slice(0, 80), email, phone};
+          app.phone.dialog({
+            system: true, iconHtml: systemIcon('bell'),
+            title: 'Permitir que o Sina envie notificações?',
+            actions: [
+              {label: 'Permitir', kind: 'primary', onClick: () => { app.notificationsOn = true; register(b); }},
+              {label: 'Não permitir', onClick: () => { app.notificationsOn = false; register(b); }},
+            ],
+          });
+        }),
+      };
+      async function register(b) {
+        b.disabled = true; b.innerHTML = '<span class="spinner"></span>Aguarde…';
+        try {
+          const r = await api(null, 'POST', '/v1/devices', {role: roleKey, ...app.profile});
+          app.token = r.deviceToken;
+          app.deviceId = r.deviceId;
+          app.onRegistered();
+        } catch (e) {
+          b.disabled = false; b.textContent = 'Continuar';
+          app.phone.view.querySelector('.err').textContent = e.status === 400 ? 'Não foi possível continuar. Confira os dados e tente de novo.' : e.message;
+        }
+      }
+    },
+  };
+}
+
+const P = makeApp('PROTECTED', document.getElementById('phone-p'));
+Object.assign(P, {
+  token: null, deviceId: null, profile: null, notificationsOn: true, listenerOn: false, batteryIgnored: false,
+  guardians: [], alerts: [], pairCode: null, scamIndex: 0, normalIndex: 0, busy: false,
+
+  onRegistered() {
+    DEMO.protectedId = P.deviceId;
+    setInterval(() => P.beat(), 60000);
+    setInterval(() => P.poll(), 4000);
+    P.go('access', 'first');
+  },
+
+  beat() {
+    if (P.token && visible()) api(P.token, 'POST', '/v1/devices/me/heartbeat', {listenerEnabled: P.listenerOn}).catch(() => {});
+  },
+
+  setListener(on) {
+    P.listenerOn = on;
+    DEMO.inactiveSince = on ? null : (DEMO.inactiveSince || Date.now());
+    P.beat();
   },
 
   async poll() {
-    if (!this.token || !visible()) return;
+    if (!P.token || !visible()) return;
     try {
-      const r = await api(this.token, 'GET', '/v1/pairings');
-      const names = r.items.map(i => i.guardian?.displayName || 'Familiar');
-      const added = names.filter(n => !this.guardians.includes(n));
-      this.guardians = names;
-      if (added.length) {
-        this.phone.toast(`${added.join(' e ')} agora recebe os avisos de golpe.`);
-        if (this.screen === 'code' || this.screen === 'home') this.show('home');
-      }
+      const r = await api(P.token, 'GET', '/v1/pairings');
+      const list = r.items.map(i => ({pairingId: i.pairingId, name: i.guardian?.displayName || 'Seu familiar', phone: i.guardian?.phone, createdAt: i.createdAt}));
+      const before = P.guardians.map(g => g.pairingId).join();
+      const added = list.filter(g => !P.guardians.some(x => x.pairingId === g.pairingId));
+      P.guardians = list;
+      if (before === list.map(g => g.pairingId).join()) return;
+      if (added.length && P.screen === 'code') {
+        P.phone.toast('Familiar ligado');
+        P.go(P.arg === 'settings' ? 'settings' : 'home');
+      } else if (P.screen === 'home' || P.screen === 'settings') P.refresh();
     } catch {}
   },
 
-  show(screen, arg) {
-    this.screen = screen;
-    const v = this[screen](arg);
-    bind(v, this.handlers);
-  },
-
-  handlers: {
-    start: (e, b) => { b.disabled = true; b.innerHTML = '<span class="spinner"></span>'; P.start(); },
-    simulate: () => P.simulate(SCAMS[P.scamIndex++ % SCAMS.length]),
-    normal: () => P.simulate(NORMALS[P.normalIndex++ % NORMALS.length]),
-    link: () => P.openCode(),
-    newcode: () => P.openCode(),
-    back: () => P.show('home'),
-    open: (e, b) => P.show('alert', P.alerts[+b.dataset.i]),
-  },
-
-  welcome() {
-    return this.phone.render(`
-      <div class="hero" style="padding-top:40px;align-items:flex-start">${BIGLOGO}
-        <h1>Pessoa protegida</h1>
-        <p>Neste celular chegam as mensagens. O Sina confere SMS e WhatsApp e avisa quando uma mensagem parece golpe.</p></div>
-      <div class="sheet"><div style="font-size:21px;font-weight:500;padding:0 8px">Bem-vindo ao Sina</div>
-        <div class="empty" style="padding-top:0">Sem cadastro e sem senha. Nesta demonstração a pessoa protegida se chama Dona Maria.</div>
-        <span class="grow"></span>
-        <button class="btn" data-act="start">Ativar proteção</button></div>`);
-  },
-
-  home() {
-    const sub = this.guardians.length ? `${this.guardians.join(' e ')} recebe os avisos de golpe.` : 'Ligue um familiar para ele receber os avisos de golpe.';
-    const list = this.alerts.length
-      ? `<div class="card">${this.alerts.map((a, i) => `<button class="row" data-act="open" data-i="${i}">${verdictBadge(a.verdict)}<span class="grow"><span class="t">${a.verdict === 'SCAM' ? 'Golpe' : 'Cuidado'}: ${esc(label(a.scamType))}</span><br><span class="s">${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></span><span class="time">${hhmm(a.at)}</span></button>`).join('')}</div>`
-      : `<div class="empty">Nenhum aviso ainda. Toque em <b>Simular golpe</b> para ver o Sina em ação.</div>`;
-    return this.phone.render(`${brand}
-      <div class="hero" style="padding-top:8px"><span class="pill" style="background:var(--ok-bg);color:var(--ok-fg)">${icon('check', '#00210E', 16, 2.4)}Proteção ativa</span>
-        <h1>Conferindo SMS e WhatsApp</h1><p>${esc(sub)}</p></div>
-      <div class="sheet"><span class="section">Avisos recentes</span>${list}
-        <span class="grow"></span>
-        <button class="btn" data-act="simulate" ${this.busy ? 'disabled' : ''}>${this.busy ? '<span class="spinner"></span>Conferindo mensagem…' : icon('warning', '#FF7A1A', 22, 2.2) + 'Simular golpe'}</button>
-        <button class="btn plain" data-act="normal" ${this.busy ? 'disabled' : ''}>Simular mensagem normal</button>
-        <button class="btn outline" data-act="link">${icon('personAdd', '#2A2C30', 22, 2.2)}Ligar familiar</button></div>`);
-  },
-
-  async openCode() {
+  async openCode(from) {
     try {
-      this.pairCode = await api(this.token, 'POST', '/v1/pairing-codes');
-      this.show('code');
-    } catch (e) { this.phone.toast(e.message); }
-  },
-
-  code() {
-    const c = this.pairCode.code;
-    return this.phone.render(`${topbar('Ligar familiar')}
-      <div class="hero" style="padding-top:4px"><p>No celular do familiar (ao lado), toque em <b style="color:#fff;font-weight:500">Continuar</b> e digite este código.</p></div>
-      <div class="sheet" style="align-items:center;text-align:center">
-        <span class="section" style="margin-top:20px">Código para o familiar</span>
-        <div class="codebox" aria-label="Código ${esc(c.split('').join(' '))}">${esc(c.slice(0, 3))}&nbsp;${esc(c.slice(3))}</div>
-        <span class="pill" style="align-self:center;background:var(--orange-light);color:var(--text)">${icon('clock', '#1A1B21', 16)}Expira às ${hhmm(this.pairCode.expiresAt)} · uso único</span>
-        <span class="grow"></span>
-        <button class="btn outline" data-act="newcode">Gerar novo código</button></div>`);
-  },
-
-  alert(a) {
-    const scam = a.verdict === 'SCAM';
-    const told = this.guardians.length ? `<span class="pill" style="background:var(--selected);color:var(--text)">${icon('bell', '#1A1B21', 16)}Aviso enviado para ${esc(this.guardians.join(' e '))}</span>` : '';
-    return this.phone.render(`${topbar('Aviso', true)}
-      <div class="hero" style="padding-top:4px;gap:14px">${verdictBadge(a.verdict, 68, 38)}
-        <h1 style="font-size:${scam ? 38 : 34}px;line-height:${scam ? 46 : 42}px">${scam ? 'Isso é golpe.' : 'Cuidado, pode ser golpe.'}</h1>
-        <p class="big">${esc(a.elderlyMessage)}</p></div>
-      <div class="sheet"><div class="msgcard"><small>${a.source === 'WHATSAPP' ? 'Mensagem do WhatsApp' : 'SMS'} · ${hhmm(a.at)}</small><p>${esc(DESC[a.scamType] || 'Mensagem com sinais de golpe.')}</p></div>
-        ${told}<span class="grow"></span>
-        <button class="btn" data-act="back">${scam ? 'Entendi, não vou pagar' : 'Entendi'}</button></div>`);
+      P.pairCode = await api(P.token, 'POST', '/v1/pairing-codes');
+      P.go('code', from);
+    } catch (e) {
+      P.phone.toast(e.status === 429 ? 'Muitos códigos em pouco tempo. Espere um pouco e tente de novo.' : e.message);
+    }
   },
 
   async simulate(msg) {
-    if (this.busy) return;
-    this.busy = true;
-    this.show('home');
-    const app = msg.source === 'WHATSAPP' ? icon('message', '#fff', 18) : icon('message', '#fff', 18);
-    this.phone.banner({app, appBg: msg.source === 'WHATSAPP' ? '#25D366' : '#1A73E8', title: msg.source === 'WHATSAPP' ? 'WhatsApp · agora' : 'Mensagens · agora', head: msg.from, body: msg.text, ms: 2600});
+    if (P.busy) return;
+    if (!P.listenerOn) {
+      P.phone.toast('A proteção está desligada. Ative o acesso às notificações para o Sina conferir as mensagens.', 4200);
+      return;
+    }
+    P.busy = true;
+    P.go('home');
+    P.phone.banner({app: icon('message', '#fff', 18), appBg: msg.source === 'WHATSAPP' ? '#25D366' : '#1A73E8', title: msg.source === 'WHATSAPP' ? 'WhatsApp · agora' : 'Mensagens · agora', head: msg.from, body: msg.text, ms: 2600});
     try {
       const a = Anon(msg.text, msg.from);
       const [r] = await Promise.all([
-        api(this.token, 'POST', '/v1/analyze', {source: msg.source, text: a.text, localSignals: a.signals, receivedAt: new Date().toISOString(), messageCount: 1}),
+        api(P.token, 'POST', '/v1/analyze', {source: msg.source, text: a.text, localSignals: a.signals, receivedAt: new Date().toISOString(), messageCount: 1}),
         sleep(2600),
       ]);
-      this.busy = false;
+      P.busy = false;
       if (r.verdict === 'SAFE') {
-        this.show('home');
-        this.phone.toast('O Sina conferiu: mensagem normal. Nenhum aviso foi dado.', 3600);
+        P.go('home');
+        P.phone.toast('O Sina conferiu: mensagem normal. Nenhum aviso foi dado.', 3600);
         return;
       }
       const alert = {...r, source: msg.source, at: Date.now()};
-      this.alerts.unshift(alert);
-      this.show('home');
-      this.phone.banner({app: icon('shield', '#fff', 18), appBg: '#2A2C30', title: 'Sina · agora', head: r.verdict === 'SCAM' ? 'Isso é golpe' : 'Cuidado, pode ser golpe', body: r.elderlyMessage, ms: 2200, onClick: () => this.show('alert', alert)});
+      P.alerts.unshift(alert);
+      P.go('home');
+      if (P.notificationsOn) {
+        const msgText = (r.elderlyMessage || '').replace(titleFor(r.verdict), '').trim();
+        P.phone.banner({app: sinaApp, appBg: '#2A2C30', title: 'Sina · agora', head: r.verdict === 'SCAM' ? 'Isso é golpe' : 'Cuidado, pode ser golpe', body: msgText, ms: 2200, onClick: () => P.go('alert', alert)});
+      }
       await sleep(1400);
-      if (this.screen === 'home') this.show('alert', alert);
+      if (P.screen === 'home') P.go('alert', alert);
     } catch (e) {
-      this.busy = false;
-      this.show('home');
-      this.phone.toast(e.code === 'RATE_LIMITED' ? 'Muitas simulações seguidas. Espere um minuto e tente de novo.' : e.message, 4000);
+      P.busy = false;
+      P.go('home');
+      P.phone.toast(e.code === 'RATE_LIMITED' ? 'Muitas simulações seguidas. Espere um minuto e tente de novo.' : e.message, 4000);
     }
   },
+
+  askListener(then) {
+    P.phone.dialog({
+      system: true, iconHtml: systemIcon('bell'),
+      title: 'Permitir que o Sina acesse as notificações?',
+      body: 'O Sina poderá ler todas as notificações, incluindo mensagens. Ele só confere SMS e WhatsApp.',
+      actions: [
+        {label: 'Permitir', kind: 'primary', onClick: () => { P.setListener(true); then(); }},
+        {label: 'Negar'},
+      ],
+    });
+  },
+});
+
+P.screens = {
+  ...commonScreens(P, {roleKey: 'PROTECTED', afterRole: () => P.go('consent')}),
+
+  consent: () => ({
+    html: `${topbar('Privacidade')}<div class="hero" style="padding-top:2px"><p>Para proteger você, o Sina lê o texto das notificações de SMS e WhatsApp deste celular.</p></div>
+      <div class="sheet" style="gap:14px">${CONSENT.map(([ic, t, d]) => `<div class="consent"><span class="c-ic">${icon(ic, '#1A1B21', 20)}</span><span><b>${t}</b><span>${d}</span></span></div>`).join('')}
+        <a class="link" href="${PRIVACY_URL}" target="_blank" rel="noopener">Ler a política de privacidade</a>
+        <span class="grow"></span>
+        <label class="check"><input type="checkbox" id="agree">Li e concordo com o uso descrito acima</label>
+        <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn plain small" data-no>Agora não</button><button class="btn small" data-yes disabled>Ativar proteção</button></div></div>`,
+    back: () => P.go('role'),
+    mount: v => {
+      const yes = v.querySelector('[data-yes]');
+      v.querySelector('#agree').addEventListener('change', e => yes.disabled = !e.target.checked);
+      P.on(v, '[data-no]', () => P.go('role'));
+      P.on(v, '[data-yes]', () => P.go('signup'));
+    },
+  }),
+
+  access: mode => ({
+    html: `<div class="hero" style="padding-top:20px">${logo(68)}<h1>Acesso às notificações</h1><p>Para conferir as mensagens, o Sina precisa ver as notificações deste celular.</p></div>
+      <div class="sheet" style="gap:16px">${['Toque em Abrir configurações.', 'Encontre o Sina e ligue "Permitir acesso a notificações".', 'Confirme tocando em Permitir.'].map((t, i) => `<div style="display:flex;gap:14px;align-items:center"><span class="stepnum">${i + 1}</span><span style="font-size:15px;line-height:21px">${t}</span></div>`).join('')}
+        <div class="note">${icon('bell', '#1A1B21', 22)}<span>O Android vai avisar que o Sina poderá ler suas notificações. É assim que ele confere SMS e WhatsApp. Outras notificações são ignoradas.</span></div>
+        <span class="grow"></span>
+        <button class="btn" data-open>Abrir configurações</button><button class="btn plain" data-skip>Agora não</button></div>`,
+    mount: v => {
+      P.on(v, '[data-open]', () => P.askListener(() => P.go('home')));
+      P.on(v, '[data-skip]', () => { if (mode === 'first') P.setListener(false); P.go('home'); });
+    },
+  }),
+
+  home: () => {
+    const names = P.guardians.map(g => g.name);
+    const sub = !P.listenerOn ? 'O Sina não consegue ver as notificações. Ative o acesso para voltar a proteger você.'
+      : !names.length ? 'Ligue um familiar para ele receber os avisos de golpe.'
+      : names.length === 1 ? `${names[0]} recebe os avisos de golpe.` : `${joinNames(names)} recebem os avisos de golpe.`;
+    const pill = P.listenerOn
+      ? `<span class="pill" style="background:var(--ok-bg);color:var(--ok-fg)">${icon('check', '#00210E', 16, 2.4)}Proteção ativa</span>`
+      : `<span class="pill" style="background:var(--sus-bg);color:var(--sus-fg)">${icon('alert', '#2B1700', 16)}Proteção desligada</span>`;
+    const list = P.alerts.length
+      ? `<div class="card">${P.alerts.map((a, i) => `<button class="row" data-open="${i}">${verdictBadge(a.verdict)}<span class="grow"><span class="t">${a.verdict === 'SCAM' ? 'Golpe' : 'Cuidado'}: ${esc(label(a.scamType))}</span><br><span class="s">${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></span><span class="time">${hhmm(a.at)}</span></button>`).join('')}</div>
+         <div class="empty" style="font-size:13px">Os avisos ficam só neste celular.</div>`
+      : `<div class="empty">Nenhum aviso até agora. Quando uma mensagem parecer golpe, ela aparece aqui.</div>`;
+    return {
+      html: `${brandbar(true)}<div class="hero" style="padding-top:6px">${pill}<h1>${P.listenerOn ? 'Conferindo SMS e WhatsApp' : 'Proteção desligada'}</h1><p>${esc(sub)}</p></div>
+        <div class="sheet"><span class="section">Avisos recentes</span>${list}
+          <span class="grow"></span>
+          ${P.listenerOn ? '' : `<button class="btn outline" data-enable>Ativar proteção</button>`}
+          <button class="btn" data-sim ${P.busy ? 'disabled' : ''}>${P.busy ? '<span class="spinner"></span>Conferindo mensagem…' : icon('warning', '#FF7A1A', 22, 2.2) + 'Simular golpe'}</button>
+          <div style="display:flex;gap:4px"><button class="btn plain" style="flex:1;min-width:0;padding:0 8px;font-size:14px" data-normal ${P.busy ? 'disabled' : ''}>Mensagem normal</button><button class="btn plain" style="flex:1;min-width:0;padding:0 8px;font-size:14px;gap:8px" data-link>${icon('personAdd', '#1A1B21', 20, 2.2)}Ligar familiar</button></div></div>`,
+      mount: v => {
+        P.on(v, '[data-open]', (e, b) => P.go('alert', P.alerts[+b.dataset.open]));
+        P.on(v, '[data-sim]', () => P.simulate(SCAMS[P.scamIndex++ % SCAMS.length]));
+        P.on(v, '[data-normal]', () => P.simulate(NORMALS[P.normalIndex++ % NORMALS.length]));
+        P.on(v, '[data-link]', () => P.openCode('home'));
+        P.on(v, '[data-enable]', () => P.go('access'));
+      },
+    };
+  },
+
+  alert: a => {
+    const scam = a.verdict === 'SCAM';
+    const msg = (a.elderlyMessage || '').replace(titleFor(a.verdict), '').trim();
+    const names = P.guardians.map(g => g.name);
+    const told = scam && a.guardianNotified ? `<span class="pill" style="background:var(--selected);color:var(--text)">${icon('bell', '#1A1B21', 16)}${names.length ? `Aviso enviado para ${esc(joinNames(names))}` : 'Seu familiar foi avisado'}</span>` : '';
+    return {
+      html: `${topbar('Aviso', true)}<div class="hero" style="padding-top:2px;gap:14px">${verdictBadge(a.verdict, 68, 38)}
+          <h1 style="font-size:${scam ? 38 : 34}px;line-height:${scam ? 46 : 42}px">${titleFor(a.verdict)}</h1>${msg ? `<p class="big">${esc(msg)}</p>` : ''}</div>
+        <div class="sheet"><div class="msgcard"><small>${a.source === 'WHATSAPP' ? 'Mensagem do WhatsApp' : 'SMS'} · ${hhmm(a.at)}</small><p>${esc(DESC[a.scamType] || 'Mensagem com sinais de golpe.')}</p></div>
+          ${told}${scam ? '' : '<div class="empty" style="font-size:14px">Avisos de suspeita não são enviados ao seu familiar.</div>'}
+          <span class="grow"></span>
+          <button class="btn" data-done>${scam ? 'Entendi, não vou pagar' : 'Entendi'}</button>
+          <button class="btn plain" data-second>${scam ? 'Abrir contatos' : 'Pedir ajuda a um familiar'}</button></div>`,
+      back: () => P.go('home'),
+      mount: v => {
+        P.on(v, '[data-done]', () => P.go('home'));
+        P.on(v, '[data-second]', () => scam ? P.phone.toast('No celular, abre os contatos para você ligar para quem conhece.') : P.openCode('home'));
+      },
+    };
+  },
+
+  code: from => {
+    const c = P.pairCode;
+    let qr = '';
+    try {
+      const q = qrcode(0, 'M');
+      q.addData(c.code);
+      q.make();
+      qr = q.createSvgTag({cellSize: 4, margin: 0, scalable: true}).replace(/fill="black"/g, 'fill="#2A2C30"');
+    } catch {}
+    return {
+      html: `${topbar('Ligar familiar')}<div class="hero" style="padding-top:2px"><p>No celular do seu familiar, abra o Sina, toque em <b>Proteger um familiar</b> e aponte a câmera para o código.</p></div>
+        <div class="sheet" style="gap:10px">${qr ? `<div class="qr" role="img" aria-label="QR code do código">${qr}</div>` : ''}
+          <div style="text-align:center;font-size:14.5px;color:var(--muted);margin-top:6px">Ou digite o código</div>
+          <div class="codebox" aria-label="Código ${esc(c.code.split('').join(' '))}">${esc(c.code.slice(0, 3))}&nbsp;${esc(c.code.slice(3))}</div>
+          <span class="pill" id="expire" style="align-self:center;background:var(--orange-light);color:var(--text)"></span>
+          <span class="grow"></span>
+          <button class="btn outline" data-new>Gerar novo código</button></div>`,
+      back: () => P.go(from === 'settings' ? 'settings' : 'home'),
+      mount: v => {
+        P.on(v, '[data-new]', () => P.openCode(from));
+        const pill = v.querySelector('#expire');
+        const tick = () => {
+          if (!pill.isConnected) return;
+          const left = Math.max(0, Math.round((new Date(c.expiresAt) - Date.now()) / 1000));
+          pill.innerHTML = left > 0
+            ? `${icon('clock', '#1A1B21', 16)}Expira em ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} · uso único`
+            : `${icon('clock', '#410002', 16)}Código expirado. Gere um novo.`;
+          pill.style.background = left > 0 ? 'var(--orange-light)' : 'var(--scam-bg)';
+          setTimeout(tick, 1000);
+        };
+        tick();
+      },
+    };
+  },
+
+  settings: () => ({
+    html: `${topbar('Ajustes')}<div style="height:12px"></div>
+      <div class="sheet flat"><div class="setlist">
+        <div class="set-h">Familiares que recebem avisos</div>
+        ${P.guardians.length ? '' : '<div class="set-i"><span class="s" style="font-size:14px">Nenhum familiar ligado.</span></div>'}
+        ${P.guardians.map((g, i) => `<div class="set-i"><span class="avatar" style="width:40px;height:40px;font-size:16px">${esc(g.name.charAt(0).toUpperCase())}</span><span class="grow"><span class="t">${esc(g.name)}</span><br><span class="s">Ligado desde ${dmy(g.createdAt || Date.now())}</span></span><button class="set-act" data-unlink="${i}">Desligar</button></div>`).join('')}
+        <button class="set-i" data-add>${icon('plus', '#1A1B21', 22)}<span class="t">Ligar outro familiar</span></button>
+        <div class="set-div"></div>
+        <div class="set-h">Proteção</div>
+        <button class="set-i" data-listener role="switch" aria-checked="${P.listenerOn}"><span class="grow"><span class="t">Acesso às notificações</span><br><span class="s">Necessário para o Sina funcionar</span></span>${sw(P.listenerOn)}</button>
+        <button class="set-i" data-battery role="switch" aria-checked="${P.batteryIgnored}"><span class="grow"><span class="t">Ignorar otimização de bateria</span><br><span class="s">Evita que o Android feche o Sina</span></span>${sw(P.batteryIgnored)}</button>
+        <div class="set-div"></div>
+        <a class="set-i" href="${PRIVACY_URL}" target="_blank" rel="noopener" style="text-decoration:none"><span class="t">Política de privacidade</span></a>
+        <div class="set-i"><span class="grow"><span class="t">Versão</span><br><span class="s">${VERSION}</span></span></div>
+      </div></div>`,
+    back: () => P.go('home'),
+    mount: v => {
+      P.on(v, '[data-add]', () => P.openCode('settings'));
+      P.on(v, '[data-unlink]', (e, b) => {
+        const g = P.guardians[+b.dataset.unlink];
+        P.phone.dialog({
+          title: `Desligar ${g.name}?`, body: `${esc(g.name)} vai parar de receber os avisos de golpe deste celular.`,
+          actions: [
+            {label: 'Cancelar'},
+            {label: 'Desligar', kind: 'danger', onClick: async () => {
+              try { await api(P.token, 'DELETE', `/v1/pairings/${g.pairingId}`); P.guardians = P.guardians.filter(x => x !== g); P.go('settings'); }
+              catch { P.phone.toast('Não deu certo. Confira a internet e tente de novo.'); }
+            }},
+          ],
+        });
+      });
+      P.on(v, '[data-listener]', () => {
+        if (P.listenerOn) {
+          P.phone.dialog({
+            system: true, iconHtml: systemIcon('bellOff'), title: 'Desligar o acesso às notificações do Sina?',
+            body: 'O Sina deixa de conferir SMS e WhatsApp e seu familiar vê a proteção desligada.',
+            actions: [{label: 'Desligar', kind: 'primary', onClick: () => { P.setListener(false); P.go('settings'); }}, {label: 'Cancelar'}],
+          });
+        } else P.askListener(() => P.go('settings'));
+      });
+      P.on(v, '[data-battery]', () => {
+        if (P.batteryIgnored) { P.batteryIgnored = false; P.go('settings'); return; }
+        P.phone.dialog({
+          system: true, iconHtml: systemIcon('battery'), title: 'Deixar o Sina sempre rodar em segundo plano?',
+          body: 'Isso pode usar mais bateria.',
+          actions: [{label: 'Permitir', kind: 'primary', onClick: () => { P.batteryIgnored = true; P.go('settings'); }}, {label: 'Negar'}],
+        });
+      });
+    },
+  }),
 };
 
-const G = {
-  phone: Phone(document.getElementById('phone-g')),
-  token: null, people: [], alerts: [], seen: new Set(), screen: 'signup', tab: 'people', first: true,
+const G = makeApp('GUARDIAN', document.getElementById('phone-g'));
+Object.assign(G, {
+  token: null, deviceId: null, profile: null, notificationsOn: true,
+  people: [], alerts: [], seen: new Set(), first: true, nicknames: {}, filterPerson: null, onlyScams: true,
 
-  show(screen, arg) {
-    this.screen = screen;
-    const v = this[screen](arg);
-    bind(v, this.handlers);
-    return v;
+  onRegistered() {
+    setInterval(() => G.poll(), 4000);
+    G.go('pair', 'first');
   },
 
-  handlers: {
-    signup: async (e, b) => {
-      const v = G.phone.view, name = v.querySelector('#gname').value.trim();
-      if (!name) { v.querySelector('.err').textContent = 'Digite seu nome.'; return; }
-      b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
-      try {
-        const r = await api(null, 'POST', '/v1/devices', {role: 'GUARDIAN', displayName: name.slice(0, 80)});
-        G.token = r.deviceToken;
-        setInterval(() => G.poll(), 4000);
-        G.show('pair');
-      } catch (err) { b.disabled = false; b.textContent = 'Continuar'; v.querySelector('.err').textContent = err.message; }
-    },
-    pair: async (e, b) => {
-      const v = G.phone.view, code = v.querySelector('#gcode').value.replace(/\D/g, '');
-      const err = v.querySelector('.err');
-      if (code.length !== 6) { err.textContent = 'O código tem 6 números.'; return; }
-      b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
-      try {
-        await api(G.token, 'POST', '/v1/pairings', {code});
-        await G.poll(true);
-        G.tab = 'people';
-        G.show('home');
-        G.phone.toast('Pronto! Você vai receber os avisos de golpe.');
-      } catch (x) {
-        b.disabled = false; b.textContent = 'Ligar';
-        err.textContent = {PAIRING_CODE_NOT_FOUND: 'Código não encontrado. Confira os números.', PAIRING_CODE_EXPIRED: 'Este código expirou. Gere um novo no outro celular.', ALREADY_PAIRED: 'Vocês já estão ligados.'}[x.code] || x.message;
-      }
-    },
-    add: () => G.show('pair', true),
-    back: () => G.show('home'),
-    tab: (e, b) => { G.tab = b.dataset.tab; G.show('home'); },
-    detail: (e, b) => G.show('detail', G.alerts.find(a => a.id === b.dataset.id)),
-  },
+  nameOf(id) { return G.people.find(p => p.id === id)?.name || 'Pessoa protegida'; },
 
   async poll(force) {
-    if (!this.token || (!visible() && !force)) return;
+    if (!G.token || (!visible() && !force)) return;
     try {
-      const [p, a] = await Promise.all([api(this.token, 'GET', '/v1/pairings'), api(this.token, 'GET', '/v1/alerts?limit=30')]);
-      const before = JSON.stringify([this.people, this.alerts.map(x => x.id)]);
-      this.people = p.items.map(i => ({id: i.protected?.deviceId, name: i.protected?.displayName || 'Pessoa protegida', status: i.protected?.protectionStatus}));
-      this.alerts = a.items;
-      const fresh = this.alerts.filter(x => !this.seen.has(x.id));
-      fresh.forEach(x => this.seen.add(x.id));
-      if (!this.first && fresh.length) {
+      const [p, a] = await Promise.all([api(G.token, 'GET', '/v1/pairings'), api(G.token, 'GET', '/v1/alerts?limit=30')]);
+      const before = JSON.stringify([G.people, G.alerts.map(x => x.id)]);
+      G.people = p.items.filter(i => i.protected).map(i => {
+        const d = i.protected;
+        const simulatedOff = d.deviceId === DEMO.protectedId && DEMO.inactiveSince;
+        return {
+          pairingId: i.pairingId, id: d.deviceId, phone: d.phone,
+          name: G.nicknames[d.deviceId] || d.displayName || 'Pessoa protegida',
+          active: simulatedOff ? false : d.protectionStatus === 'ACTIVE',
+          lastSeenAt: simulatedOff ? DEMO.inactiveSince : d.lastSeenAt,
+        };
+      });
+      G.alerts = a.items;
+      const fresh = G.alerts.filter(x => !G.seen.has(x.id));
+      fresh.forEach(x => G.seen.add(x.id));
+      if (!G.first && fresh.length && G.notificationsOn) {
         const x = fresh[0];
-        this.phone.banner({app: icon('shield', '#fff', 18), appBg: '#2A2C30', title: 'Sina · agora', head: x.verdict === 'SCAM' ? 'Alerta de golpe' : 'Alerta de suspeita', body: `${this.nameOf(x.protectedDeviceId)} recebeu ${x.verdict === 'SCAM' ? 'um golpe' : 'uma mensagem suspeita'} de ${label(x.scamType)}.`, ms: 5000, onClick: () => this.show('detail', x)});
+        G.phone.banner({app: sinaApp, appBg: '#2A2C30', title: 'Sina · agora', head: x.verdict === 'SCAM' ? 'Alerta de golpe' : 'Alerta de suspeita', body: `${G.nameOf(x.protectedDeviceId)} recebeu ${x.verdict === 'SCAM' ? 'um golpe' : 'uma mensagem suspeita'} de ${label(x.scamType)}.`, ms: 5000, onClick: () => G.go('detail', x)});
       }
-      this.first = false;
-      if (this.screen === 'home' && before !== JSON.stringify([this.people, this.alerts.map(x => x.id)])) this.show('home');
+      G.first = false;
+      if (before !== JSON.stringify([G.people, G.alerts.map(x => x.id)]) && ['home', 'alerts', 'settings', 'inactive'].includes(G.screen)) G.refresh();
     } catch {}
   },
 
-  nameOf(id) { return this.people.find(p => p.id === id)?.name || 'Pessoa protegida'; },
+  nav(tab) {
+    const today = G.alerts.filter(a => a.verdict === 'SCAM' && sameDay(a.createdAt, Date.now())).length;
+    const item = (t, ic, text, dot) => `<button role="tab" data-tab="${t}" aria-selected="${tab === t}"><span class="ind">${icon(ic, tab === t ? '#1A1B21' : '#44474F', 22)}</span>${text}${dot ? `<span class="dot">${dot}</span>` : ''}</button>`;
+    return `<nav class="nav" role="tablist">${item('home', 'shield', 'Pessoas')}${item('alerts', 'bell', 'Alertas', today)}${item('settings', 'gear', 'Ajustes')}</nav>`;
+  },
 
-  signup() {
-    return this.phone.render(`
-      <div class="hero" style="padding-top:40px">${BIGLOGO}<h1>Familiar</h1>
-        <p>Neste celular chegam os alertas quando a pessoa protegida recebe uma mensagem de golpe.</p></div>
-      <div class="sheet"><div class="field"><label for="gname">Seu nome</label><input id="gname" value="Ana" maxlength="80" autocomplete="off"></div>
+  mountNav(v) { G.on(v, '[data-tab]', (e, b) => G.go(b.dataset.tab)); },
+
+  callButton(p) {
+    return p?.phone ? `<button class="btn" data-call>${icon('phone', '#FF7A1A', 22, 2.2)}Ligar para ${esc(p.name)}</button>` : '';
+  },
+
+  mountCall(v, p) {
+    G.on(v, '[data-call]', () => G.phone.toast(`No celular, abre o discador com o número de ${p.name}: ${fmtPhone(p.phone)}`, 4500));
+  },
+});
+
+G.screens = {
+  ...commonScreens(G, {roleKey: 'GUARDIAN', afterRole: () => G.go('signup')}),
+
+  pair: mode => ({
+    html: `${mode === 'first' ? '<div style="height:60px"></div>' : topbar('Escanear código')}
+      <div class="hero" style="padding-top:0;text-align:center"><p>No celular da pessoa protegida, toque em <b>Ligar familiar</b> e aponte a câmera para o código.</p></div>
+      <div class="camera"><svg viewBox="0 0 220 220" aria-hidden="true" fill="none" stroke="#FF7A1A" stroke-width="4" stroke-linecap="round"><path d="M20 56V36a16 16 0 0 1 16-16h20M164 20h20a16 16 0 0 1 16 16v20M200 164v20a16 16 0 0 1-16 16h-20M56 200H36a16 16 0 0 1-16-16v-20"/></svg>A câmera não funciona na demonstração. Digite o código abaixo.</div>
+      <div class="sheet" style="flex:0 0 auto;gap:12px;padding:24px 20px 18px"><div style="font-size:17px;font-weight:500;padding:0 4px">Ou digite o código de 6 números</div>
+        ${field('g-code', 'Código', '', '', 'text', 'inputmode="numeric" maxlength="6" class="code" placeholder="••••••"')}
         <div class="err" aria-live="polite"></div>
-        <div class="note">${icon('bell', '#1A1B21', 22)}<span>Seu nome aparece para a pessoa protegida. Use um nome fictício nesta demonstração.</span></div>
-        <span class="grow"></span><button class="btn" data-act="signup">Continuar</button></div>`);
-  },
+        <button class="btn" data-pair>Ligar</button></div>`,
+    back: () => G.go('home'),
+    mount: v => {
+      const input = v.querySelector('#g-code');
+      input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); });
+      input.addEventListener('keydown', e => e.key === 'Enter' && v.querySelector('[data-pair]').click());
+      G.on(v, '[data-pair]', async (e, b) => {
+        const err = v.querySelector('.err');
+        const code = input.value;
+        if (code.length !== 6) { err.textContent = 'O código tem 6 números.'; return; }
+        b.disabled = true; b.innerHTML = '<span class="spinner"></span>Ligando…';
+        try {
+          const r = await api(G.token, 'POST', '/v1/pairings', {code});
+          await G.poll(true);
+          const person = r?.protected;
+          G.go('home');
+          G.phone.dialog({
+            title: 'Ligado!', input: {label: 'Como você chama essa pessoa?', value: person?.displayName || '', placeholder: 'Ex.: Mãe, Vó Maria'},
+            actions: [{label: 'Continuar', kind: 'primary', onClick: value => {
+              if (person && value && value.trim()) G.nicknames[person.deviceId] = value.trim().slice(0, 40);
+              G.people.forEach(p => { if (G.nicknames[p.id]) p.name = G.nicknames[p.id]; });
+              G.go('home');
+            }}],
+          });
+        } catch (x) {
+          b.disabled = false; b.textContent = 'Ligar';
+          err.textContent = {
+            PAIRING_CODE_EXPIRED: 'Código expirado. Gere um novo no celular da pessoa protegida.',
+            PAIRING_CODE_NOT_FOUND: 'Código não encontrado. Confira os 6 números.',
+            VALIDATION_ERROR: 'Código não encontrado. Confira os 6 números.',
+            ALREADY_PAIRED: 'Vocês já estão ligados.',
+            RATE_LIMITED: 'Muitas tentativas. Espere um pouco e tente de novo.',
+          }[x.code] || (x.code === 'NETWORK' ? x.message : 'Não foi possível ligar. Tente de novo.');
+        }
+      });
+    },
+  }),
 
-  pair(canBack) {
-    const v = this.phone.render(`${canBack ? topbar('Proteger alguém') : '<div style="height:60px"></div>'}
-      <div class="hero" style="padding-top:4px"><h1 style="font-size:30px;line-height:36px">Digite o código</h1>
-        <p>No celular da pessoa protegida (ao lado), toque em <b style="color:#fff;font-weight:500">Ligar familiar</b> para ver o código de 6 números.</p></div>
-      <div class="sheet"><div class="field"><label for="gcode">Código de 6 números</label><input id="gcode" class="code" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••••"></div>
-        <div class="err" aria-live="polite"></div>
-        <div class="empty">No app também dá para escanear o QR code do outro celular com a câmera.</div>
-        <span class="grow"></span><button class="btn" data-act="pair">Ligar</button></div>`);
-    const input = v.querySelector('#gcode');
-    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); });
-    input.addEventListener('keydown', e => e.key === 'Enter' && v.querySelector('[data-act="pair"]').click());
-    return v;
-  },
-
-  nav() {
-    const today = this.alerts.filter(a => sameDay(a.createdAt, Date.now())).length;
-    const item = (tab, ic, text, dot) => `<button role="tab" data-act="tab" data-tab="${tab}" aria-selected="${this.tab === tab}"><span class="ind">${icon(ic, this.tab === tab ? '#1A1B21' : '#44474F', 22)}</span>${text}${dot ? `<span class="dot">${dot}</span>` : ''}</button>`;
-    return `<nav class="nav" role="tablist">${item('people', 'shield', 'Pessoas')}${item('alerts', 'bell', 'Alertas', today)}</nav>`;
-  },
-
-  home() {
-    if (this.tab === 'alerts') return this.alertsTab();
-    const today = this.alerts.filter(a => a.verdict === 'SCAM' && sameDay(a.createdAt, Date.now()));
-    const summary = !this.people.length ? 'Ninguém ligado ainda.'
-      : today.length ? `${today.length} ${today.length > 1 ? 'golpes' : 'golpe'} hoje` : `${this.people.length} ${this.people.length > 1 ? 'pessoas' : 'pessoa'} · nenhum golpe hoje`;
-    const cards = this.people.map(p => {
-      const last = this.alerts.find(a => a.protectedDeviceId === p.id && sameDay(a.createdAt, Date.now()));
-      const active = p.status !== 'INACTIVE';
-      return `<div class="person"><div class="head"><span class="avatar">${esc(p.name.charAt(0).toUpperCase())}</span>
-        <span class="grow"><span style="font-size:17px;font-weight:500">${esc(p.name)}</span><br>
-        <span class="pill" style="margin-top:6px;height:26px;background:${active ? 'var(--ok-bg)' : 'none'};color:${active ? 'var(--ok-fg)' : 'var(--muted)'};${active ? '' : 'border:1px solid var(--neutral)'}"><span style="width:8px;height:8px;border-radius:4px;background:${active ? 'var(--ok-dot)' : 'var(--neutral)'}"></span>${active ? 'Ativa' : 'Inativa'}</span></span></div>
-        ${last ? `<button class="foot" data-act="detail" data-id="${esc(last.id)}">${icon('warning', '#410002', 18)}${last.verdict === 'SCAM' ? 'Golpe' : 'Suspeita'} hoje às ${hhmm(last.createdAt)} · ${esc(label(last.scamType))}</button>` : ''}</div>`;
+  home: () => {
+    const today = G.alerts.filter(a => a.verdict === 'SCAM' && sameDay(a.createdAt, Date.now())).length;
+    const inactive = G.people.filter(p => !p.active).length;
+    const summary = !G.people.length ? 'Ninguém ligado ainda.'
+      : [today === 0 ? 'Nenhum alerta hoje' : today === 1 ? '1 alerta hoje' : `${today} alertas hoje`, inactive === 0 ? null : inactive === 1 ? '1 proteção inativa' : `${inactive} proteções inativas`].filter(Boolean).join(' · ');
+    const cards = G.people.map(p => {
+      const last = G.alerts.find(a => a.protectedDeviceId === p.id && a.verdict === 'SCAM' && sameDay(a.createdAt, Date.now()));
+      const pill = p.active
+        ? `<span class="pill" style="margin-top:6px;height:26px;background:var(--ok-bg);color:var(--ok-fg)"><span style="width:8px;height:8px;border-radius:4px;background:var(--ok-dot)"></span>Ativa</span>`
+        : `<span class="pill" style="margin-top:6px;height:26px;border:1px solid var(--neutral);color:var(--muted)"><span style="width:8px;height:8px;border-radius:4px;background:var(--neutral)"></span>Inativa</span>`;
+      const foot = !p.active
+        ? `<button class="foot" data-inactive="${esc(p.id)}" style="background:var(--selected);color:var(--text)">${icon('alert', '#44474F', 18)}<span class="grow">O Sina parou de funcionar no celular</span>${icon('chevron', '#44474F', 18)}</button>`
+        : last ? `<button class="foot" data-detail="${esc(last.id)}" style="background:var(--scam-bg);color:var(--scam-fg)">${icon('warning', '#410002', 18)}<span class="grow">Golpe hoje, ${hhmm(last.createdAt)} · ${esc(label(last.scamType))}</span>${icon('chevron', '#410002', 18)}</button>` : '';
+      return `<div class="person"><div class="head"><span class="avatar" style="${p.active ? '' : 'background:var(--border)'}">${esc(p.name.charAt(0).toUpperCase())}</span>
+        <span class="grow"><span style="font-size:17px;font-weight:500">${esc(p.name)}</span><br>${pill}</span></div>${foot}</div>`;
     }).join('');
-    return this.phone.render(`${brand}
-      <div class="hero" style="padding-top:8px"><h1>Pessoas protegidas</h1><p>${esc(summary)}</p></div>
-      <div class="sheet">${cards || '<div class="empty">Ninguém ligado ainda.</div>'}<span class="grow"></span>
-        <button class="btn" data-act="add">${icon('plus', '#FF7A1A', 22, 2.4)}Proteger alguém</button></div>${this.nav()}`);
+    return {
+      html: `${brandbar()}<div class="hero" style="padding-top:6px"><h1>Pessoas protegidas</h1><p>${esc(summary)}</p></div>
+        <div class="sheet">${cards || '<div class="empty">Toque em Proteger alguém e escaneie o código no celular da pessoa que você quer proteger.</div>'}<span class="grow"></span>
+          <button class="btn" data-add>${icon('plus', '#FF7A1A', 22, 2.4)}Proteger alguém</button></div>${G.nav('home')}`,
+      mount: v => {
+        G.mountNav(v);
+        G.on(v, '[data-add]', () => G.go('pair'));
+        G.on(v, '[data-detail]', (e, b) => G.go('detail', G.alerts.find(a => a.id === b.dataset.detail)));
+        G.on(v, '[data-inactive]', (e, b) => G.go('inactive', b.dataset.inactive));
+      },
+    };
   },
 
-  alertsTab() {
+  alerts: () => {
+    const items = G.alerts.filter(a => (!G.filterPerson || a.protectedDeviceId === G.filterPerson) && (!G.onlyScams || a.verdict === 'SCAM'));
     let lastDay = null;
-    const rows = this.alerts.map(a => {
+    const rows = items.map(a => {
       const day = new Date(a.createdAt).toLocaleDateString('pt-BR', {weekday: 'long', day: 'numeric', month: 'short'}).toUpperCase();
-      const header = day !== lastDay ? `<div class="section" style="padding:14px 20px 6px">${esc(day)}</div>` : '';
+      const header = day !== lastDay ? `<div class="section" style="padding:16px 20px 8px">${esc(day)}</div>` : '';
       lastDay = day;
-      return `${header}<button class="row" style="align-items:flex-start;padding:12px 20px" data-act="detail" data-id="${esc(a.id)}">${verdictBadge(a.verdict)}
-        <span class="grow"><span class="t">${a.verdict === 'SCAM' ? 'Golpe' : 'Suspeita'} · ${esc(cap(label(a.scamType)))}</span><br>
-        ${a.familySummary ? `<span class="s" style="font-size:13.5px;line-height:19px">${esc(a.familySummary)}</span><br>` : ''}
-        <span class="s" style="font-size:12px">${esc(this.nameOf(a.protectedDeviceId))} · ${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></span>
+      return `${header}<button class="row" style="align-items:flex-start;padding:12px 20px;border-top:0" data-detail="${esc(a.id)}">${verdictBadge(a.verdict)}
+        <span class="grow"><span class="t" style="font-size:16px">${a.verdict === 'SCAM' ? 'Golpe' : 'Suspeita'} · ${esc(cap(label(a.scamType)))}</span><br>
+        ${a.familySummary ? `<span class="s" style="font-size:14px;line-height:20px">${esc(a.familySummary)}</span><br>` : ''}
+        <span class="s" style="font-size:12px">${esc(G.nameOf(a.protectedDeviceId))} · ${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></span>
         <span class="time">${hhmm(a.createdAt)}</span></button>`;
     }).join('');
-    return this.phone.render(`${brand}<div class="hero" style="padding-top:8px"><h1>Alertas</h1></div>
-      <div class="sheet flat">${rows || '<div class="empty" style="padding:6px 24px">Nenhum alerta por aqui.</div>'}</div>${this.nav()}`);
+    const chip = (key, text, on) => `<button class="chip ${on ? 'on' : ''}" data-chip="${esc(key)}" aria-pressed="${on}">${on ? icon('check', '#FF7A1A', 18, 2.4) : ''}${esc(text)}</button>`;
+    return {
+      html: `${brandbar()}<div class="hero" style="padding-top:6px"><h1>Alertas</h1></div>
+        <div class="sheet flat" style="padding-top:22px"><div class="chips">${G.people.map(p => chip(p.id, p.name, G.filterPerson === p.id)).join('')}${chip('scams', 'Só golpes', G.onlyScams)}</div>
+          ${rows || '<div class="empty" style="padding:12px 24px">Nenhum alerta por aqui.</div>'}</div>${G.nav('alerts')}`,
+      mount: v => {
+        G.mountNav(v);
+        G.on(v, '[data-chip]', (e, b) => {
+          const k = b.dataset.chip;
+          if (k === 'scams') G.onlyScams = !G.onlyScams; else G.filterPerson = G.filterPerson === k ? null : k;
+          G.go('alerts');
+        });
+        G.on(v, '[data-detail]', (e, b) => G.go('detail', G.alerts.find(a => a.id === b.dataset.detail)));
+      },
+    };
   },
 
-  detail(a) {
-    if (!a) return this.show('home');
-    const scam = a.verdict === 'SCAM', person = this.nameOf(a.protectedDeviceId);
-    return this.phone.render(`${topbar(scam ? 'Alerta de golpe' : 'Alerta de suspeita')}
-      <div class="hero" style="padding-top:6px;gap:10px">
-        <span class="pill" style="background:${scam ? 'var(--scam-bg)' : 'var(--sus-bg)'};color:${scam ? 'var(--scam-fg)' : 'var(--sus-fg)'}">${icon(scam ? 'warning' : 'alert', scam ? '#410002' : '#2B1700', 16)}${scam ? 'Golpe' : 'Suspeita'} · ${Math.round(a.confidence * 100)}% de certeza</span>
-        <h1>${esc(cap(label(a.scamType)))}</h1>${a.familySummary ? `<p>${esc(a.familySummary)}</p>` : ''}</div>
-      <div class="sheet" style="gap:16px"><div class="card">
-          <div class="info"><span>Pessoa</span><span>${esc(person)}</span></div>
-          <div class="info"><span>Recebida por</span><span>${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></div>
-          <div class="info"><span>Quando</span><span>${whenLabel(a.createdAt)}</span></div></div>
-        ${a.messageExcerpt ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="section">Trecho da mensagem</span><div class="excerpt">${esc(a.messageExcerpt)}</div><span class="s" style="font-size:12px;color:var(--muted);padding:0 4px">Nomes, valores e números foram removidos no celular de ${esc(person)}.</span></div>` : ''}
-        <div style="display:flex;flex-direction:column;gap:8px"><span class="section">O que fazer</span><ol class="todo">
-          <li>Ligue para ${esc(person)} e confirme que não houve pagamento nem envio de código.</li>
-          <li>Se houve pagamento por Pix, peça ao banco a devolução pelo MED do Pix.</li></ol></div></div>`);
+  detail: a => {
+    if (!a) return G.screens.home();
+    const scam = a.verdict === 'SCAM';
+    const p = G.people.find(x => x.id === a.protectedDeviceId);
+    const person = G.nameOf(a.protectedDeviceId);
+    return {
+      html: `${topbar(scam ? 'Alerta de golpe' : 'Alerta de suspeita')}
+        <div class="hero" style="padding-top:4px;gap:10px">
+          <span class="pill" style="background:${scam ? 'var(--scam-bg)' : 'var(--sus-bg)'};color:${scam ? 'var(--scam-fg)' : 'var(--sus-fg)'}">${icon(scam ? 'warning' : 'alert', scam ? '#410002' : '#2B1700', 16)}${scam ? 'Golpe' : 'Suspeita'} · ${Math.round(a.confidence * 100)}% de certeza</span>
+          <h1>${esc(cap(label(a.scamType)))}</h1>${a.familySummary ? `<p>${esc(a.familySummary)}</p>` : ''}</div>
+        <div class="sheet" style="gap:16px"><div class="card">
+            <div class="info"><span>Pessoa</span><span>${esc(person)}</span></div>
+            <div class="info"><span>Recebida por</span><span>${a.source === 'WHATSAPP' ? 'WhatsApp' : 'SMS'}</span></div>
+            <div class="info"><span>Quando</span><span>${whenLabel(a.createdAt)}</span></div></div>
+          ${a.messageExcerpt ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="section">Trecho da mensagem</span><div class="excerpt">${esc(a.messageExcerpt)}</div><span style="font-size:12px;color:var(--muted);padding:0 4px">Nomes, valores e números foram removidos no celular de ${esc(person)}.</span></div>` : ''}
+          <div style="display:flex;flex-direction:column;gap:8px"><span class="section">O que fazer</span><ol class="todo">
+            <li>Ligue para ${esc(person)} e confirme que não houve pagamento nem envio de código.</li>
+            <li>Se houve pagamento por Pix, peça ao banco a devolução pelo MED do Pix.</li></ol></div>
+          ${G.callButton(p)}</div>`,
+      back: () => G.go('home'),
+      mount: v => G.mountCall(v, p),
+    };
   },
+
+  inactive: id => {
+    const p = G.people.find(x => x.id === id);
+    if (!p) return G.screens.home();
+    const since = p.lastSeenAt ? (sameDay(p.lastSeenAt, Date.now()) ? `hoje, ${hhmm(p.lastSeenAt)}` : `${dmy(p.lastSeenAt)}, ${hhmm(p.lastSeenAt)}`) : null;
+    const text = p.active ? `O sinal do celular de ${p.name} voltou. Está tudo certo.`
+      : since ? `O celular de ${p.name} não manda sinal desde ${since}. Enquanto isso, golpes não são detectados.`
+      : `O celular de ${p.name} ainda não mandou sinal. Enquanto isso, golpes não são detectados.`;
+    const shieldIcon = icon('shield', '#fff', 40, 2, p.active ? '' : '<path d="M4 4l16 16" stroke="#FF7A1A"/>');
+    return {
+      html: `${topbar(p.name)}<div class="hero" style="padding-top:8px;gap:14px"><span class="badge" style="width:72px;height:72px;border-radius:36px;background:var(--raised)">${shieldIcon}</span>
+          <h1>${p.active ? 'Proteção ativa' : 'Proteção desligada'}</h1><p>${esc(text)}</p></div>
+        <div class="sheet" style="gap:16px"><span class="section">Causas mais comuns</span>
+          <div class="card">${[['bellOff', 'O acesso às notificações foi desligado'], ['battery', 'A economia de bateria fechou o Sina'], ['noWifi', 'Celular desligado ou sem internet']].map(([ic, t]) => `<div class="row" style="min-height:0;padding:14px 16px">${icon(ic, '#2A2C30', 22)}<span style="font-size:15px;line-height:21px">${t}</span></div>`).join('')}</div>
+          <div class="empty" style="font-size:14px;line-height:20px">Peça para ${esc(p.name)} abrir o Sina. Este aviso some sozinho quando o sinal voltar.</div>
+          <span class="grow"></span>${G.callButton(p)}</div>`,
+      back: () => G.go('home'),
+      mount: v => G.mountCall(v, p),
+    };
+  },
+
+  settings: () => ({
+    html: `${brandbar()}<div class="hero" style="padding-top:6px"><h1>Ajustes</h1></div>
+      <div class="sheet flat"><div class="setlist">
+        <div class="set-h">Pessoas que você protege</div>
+        ${G.people.length ? '' : '<div class="set-i"><span class="s" style="font-size:14px">Ninguém ligado ainda.</span></div>'}
+        ${G.people.map((p, i) => `<div class="set-i"><span class="avatar" style="width:40px;height:40px;font-size:16px">${esc(p.name.charAt(0).toUpperCase())}</span><button class="grow" data-rename="${i}" style="background:none;border:0;text-align:left;padding:0;color:inherit"><span class="t">${esc(p.name)}</span><br><span class="s">Toque para mudar o nome</span></button><button class="set-act" data-unlink="${i}">Desligar</button></div>`).join('')}
+        <div class="set-div"></div>
+        <div class="set-h">Avisos</div>
+        <button class="set-i" data-notif role="switch" aria-checked="${G.notificationsOn}"><span class="grow"><span class="t">Notificações</span><br><span class="s">Necessárias para receber os alertas</span></span>${sw(G.notificationsOn)}</button>
+        <div class="set-div"></div>
+        <a class="set-i" href="${PRIVACY_URL}" target="_blank" rel="noopener" style="text-decoration:none"><span class="t">Política de privacidade</span></a>
+        <div class="set-i"><span class="grow"><span class="t">Versão</span><br><span class="s">${VERSION}</span></span></div>
+      </div></div>${G.nav('settings')}`,
+    mount: v => {
+      G.mountNav(v);
+      G.on(v, '[data-notif]', () => { G.notificationsOn = !G.notificationsOn; G.go('settings'); });
+      G.on(v, '[data-rename]', (e, b) => {
+        const p = G.people[+b.dataset.rename];
+        G.phone.dialog({
+          title: 'Como você chama essa pessoa?', input: {label: 'Nome', value: p.name},
+          actions: [{label: 'Cancelar'}, {label: 'Salvar', kind: 'primary', onClick: value => {
+            const name = (value || '').trim();
+            if (name) G.nicknames[p.id] = name.slice(0, 40); else delete G.nicknames[p.id];
+            G.poll(true).then(() => G.go('settings'));
+          }}],
+        });
+      });
+      G.on(v, '[data-unlink]', (e, b) => {
+        const p = G.people[+b.dataset.unlink];
+        G.phone.dialog({
+          title: `Desligar ${p.name}?`, body: `Você vai parar de receber os alertas de golpe de ${esc(p.name)}.`,
+          actions: [
+            {label: 'Cancelar'},
+            {label: 'Desligar', kind: 'danger', onClick: async () => {
+              try { await api(G.token, 'DELETE', `/v1/pairings/${p.pairingId}`); await G.poll(true); G.go('settings'); }
+              catch { G.phone.toast('Confira a internet e tente de novo.'); }
+            }},
+          ],
+        });
+      });
+    },
+  }),
 };
 
-P.show('welcome');
-G.show('signup');
+P.go('splash');
+G.go('splash');
 
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));

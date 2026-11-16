@@ -43,6 +43,7 @@ class PairingControllerTest {
         String body = redeem(familiar[1], code).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.protected.deviceId").value(idoso[0]))
                 .andExpect(jsonPath("$.protected.displayName").value("Dona Maria"))
+                .andExpect(jsonPath("$.protected.phone").value("11987654321"))
                 .andExpect(jsonPath("$.protected.protectionStatus").value("INACTIVE"))
                 .andReturn().getResponse().getContentAsString();
         String pairingId = JsonPath.read(body, "$.pairingId");
@@ -136,7 +137,7 @@ class PairingControllerTest {
     }
 
     private String[] register(String role, String name) throws Exception {
-        String json = name == null ? "{\"role\":\"%s\"}".formatted(role) : "{\"role\":\"%s\",\"displayName\":\"%s\"}".formatted(role, name);
+        String json = "{\"role\":\"%s\",\"displayName\":\"%s\",%s}".formatted(role, name == null ? "Pessoa" : name, "\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"");
         String body = mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content(json))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return new String[]{JsonPath.read(body, "$.deviceId"), JsonPath.read(body, "$.deviceToken")};

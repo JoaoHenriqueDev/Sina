@@ -26,7 +26,7 @@ public final class PairingDtos {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record PeerDevice(UUID deviceId, String displayName, ProtectionStatus protectionStatus, Instant lastSeenAt) {
+    public record PeerDevice(UUID deviceId, String displayName, ProtectionStatus protectionStatus, Instant lastSeenAt, String phone) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

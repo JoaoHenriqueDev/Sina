@@ -98,7 +98,7 @@ public class FcmResendGuardianNotifier implements GuardianNotifier {
             if (pushOn && hasText(guardian.getFcmToken())) {
                 channels.add(new Channel(guardian, DeliveryChannel.PUSH, guardian.getFcmToken()));
             }
-            if (emailOn && hasText(guardian.getEmail())) {
+            if (emailOn && hasText(guardian.getEmail()) && !isReservedDomain(guardian.getEmail())) {
                 channels.add(new Channel(guardian, DeliveryChannel.EMAIL, guardian.getEmail()));
             }
         }
@@ -107,6 +107,11 @@ public class FcmResendGuardianNotifier implements GuardianNotifier {
 
     private String protectedName(UUID protectedId) {
         return deviceRepository.findById(protectedId).map(Device::getDisplayName).orElse(null);
+    }
+
+    static boolean isReservedDomain(String email) {
+        String domain = email.substring(email.lastIndexOf('@') + 1).toLowerCase(java.util.Locale.ROOT);
+        return domain.matches("(.*\\.)?example\\.(com|org|net)") || domain.matches(".*\\.(test|example|invalid|localhost)");
     }
 
     private static boolean hasText(String value) {

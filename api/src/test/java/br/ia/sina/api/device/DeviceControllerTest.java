@@ -51,7 +51,7 @@ class DeviceControllerTest {
 
     @Test
     void registraEUsaOToken() throws Exception {
-        String token = register("{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"email\":\"ana@exemplo.com\"}");
+        String token = register("{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"email\":\"ana@exemplo.com\",\"phone\":\"(11) 98765-4321\"}");
 
         mvc.perform(put("/v1/devices/me/fcm-token").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"fcmToken\":\"novo\"}"))
@@ -72,11 +72,27 @@ class DeviceControllerTest {
     }
 
     @Test
-    void emailEmProtectedDa400() throws Exception {
-        mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"role\":\"PROTECTED\",\"email\":\"a@b.com\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+    void cadastroIncompletoOuTelefoneInvalidoDa400() throws Exception {
+        for (String json : new String[]{
+                "{\"role\":\"PROTECTED\"}",
+                "{\"role\":\"PROTECTED\",\"displayName\":\"Maria\",\"email\":\"maria@teste.com.br\"}",
+                "{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"phone\":\"11987654321\"}",
+                "{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"email\":\"ana@teste.com.br\",\"phone\":\"abc\"}",
+                "{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"email\":\"ana@teste.com.br\",\"phone\":\"(11) 9876-54\"}"}) {
+            mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+        }
+    }
+
+    @Test
+    void cadastroGuardaTelefoneSoComDigitos() throws Exception {
+        String body = mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"PROTECTED\",\"displayName\":\" Maria \",\"email\":\"maria@teste.com.br\",\"phone\":\"+55 (11) 98765-4321\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        var device = repository.findById(UUID.fromString(JsonPath.read(body, "$.deviceId"))).orElseThrow();
+        assertThat(device.getPhone()).isEqualTo("5511987654321");
+        assertThat(device.getDisplayName()).isEqualTo("Maria");
     }
 
     @Test
@@ -91,14 +107,14 @@ class DeviceControllerTest {
 
     @Test
     void heartbeatDeGuardianDa403() throws Exception {
-        String token = register("{\"role\":\"GUARDIAN\"}");
+        String token = register("{\"role\":\"GUARDIAN\",\"displayName\":\"Ana\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
         heartbeat(token, true).andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error.code").value("FORBIDDEN_ROLE"));
     }
 
     @Test
     void heartbeatSoAtualizaQuandoListenerAtivo() throws Exception {
-        String body = mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"PROTECTED\"}"))
+        String body = mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"PROTECTED\",\"displayName\":\"Maria\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}"))
                 .andReturn().getResponse().getContentAsString();
         String token = JsonPath.read(body, "$.deviceToken");
         UUID id = UUID.fromString(JsonPath.read(body, "$.deviceId"));
