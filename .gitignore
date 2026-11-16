@@ -16,10 +16,10 @@ service-account*.json
 target/
 build/
 .gradle/
-!gradle/wrapper/gradle-wrapper.jar
 *.class
 *.log
 *.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 hs_err_pid*
