@@ -11,6 +11,7 @@ import br.ia.sina.api.device.role.RequiresRole;
 import br.ia.sina.api.device.service.DeviceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,5 +46,11 @@ public class DeviceController {
     @RequiresRole(DeviceRole.PROTECTED)
     void heartbeat(@CurrentDevice Device device, @Valid @RequestBody HeartbeatRequest request) {
         service.heartbeat(device, request.listenerEnabled());
+    }
+
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(@CurrentDevice Device device) {
+        service.delete(device);
     }
 }

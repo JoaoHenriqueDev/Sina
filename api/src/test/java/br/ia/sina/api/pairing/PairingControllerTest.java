@@ -136,6 +136,23 @@ class PairingControllerTest {
                 .andExpect(jsonPath("$.error.code").value("RATE_LIMITED"));
     }
 
+    @Test
+    void excluirContaApagaCadastroLigacoesEAlertas() throws Exception {
+        String[] maria = register("PROTECTED", "Maria");
+        String[] ana = register("GUARDIAN", "Ana");
+        redeem(ana[1], createCode(maria[1])).andExpect(status().isCreated());
+        jdbc.update("INSERT INTO alert (id, protected_id, source, verdict, scam_type, confidence, family_summary, created_at) VALUES (?, ?::uuid, 'SMS', 'SCAM', 'FALSE_BANK', 0.9, 'Resumo', now())",
+                UUID.randomUUID(), maria[0]);
+
+        mvc.perform(delete("/v1/devices/me").header("Authorization", "Bearer " + maria[1])).andExpect(status().isNoContent());
+
+        mvc.perform(get("/v1/pairings").header("Authorization", "Bearer " + ana[1]))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty());
+        mvc.perform(get("/v1/pairings").header("Authorization", "Bearer " + maria[1])).andExpect(status().isUnauthorized());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM device WHERE id = ?::uuid", Integer.class, maria[0])).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM alert WHERE protected_id = ?::uuid", Integer.class, maria[0])).isZero();
+    }
+
     private String[] register(String role, String name) throws Exception {
         String json = "{\"role\":\"%s\",\"displayName\":\"%s\",%s}".formatted(role, name == null ? "Pessoa" : name, "\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"");
         String body = mvc.perform(post("/v1/devices").contentType(MediaType.APPLICATION_JSON).content(json))
