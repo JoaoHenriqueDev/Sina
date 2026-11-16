@@ -420,6 +420,23 @@ const field = (id, labelText, value, help, type = 'text', extra = '') =>
   `<div class="field"><label for="${id}">${esc(labelText)}</label><input id="${id}" type="${type}" value="${esc(value)}" autocomplete="off" ${extra}>${help ? `<small id="${id}-help">${esc(help)}</small>` : ''}</div>`;
 const systemIcon = name => `<span style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">${icon(name, '#3F5F90', 28)}</span>`;
 const sinaApp = icon('shield', '#fff', 18);
+const deleteItem = `<div class="set-div"></div><button class="set-i" data-delete><span class="grow"><span class="t" style="color:var(--error)">Excluir minha conta</span><br><span class="s">Apaga seus dados do Sina</span></span></button>`;
+function mountDelete(app, v, what, reset) {
+  app.on(v, '[data-delete]', () => app.phone.dialog({
+    title: 'Excluir sua conta?', body: `${what} Isso não pode ser desfeito.`,
+    actions: [
+      {label: 'Cancelar'},
+      {label: 'Excluir', kind: 'danger', onClick: async () => {
+        try {
+          await api(app.token, 'DELETE', '/v1/devices/me');
+          app.token = null; app.deviceId = null; app.profile = null;
+          reset();
+          app.go('onboarding', 0);
+        } catch { app.phone.toast('Não deu certo. Confira a internet e tente de novo.'); }
+      }},
+    ],
+  }));
+}
 
 function makeApp(role, el) {
   const self = {
@@ -540,8 +557,7 @@ Object.assign(P, {
 
   onRegistered() {
     DEMO.protectedId = P.deviceId;
-    setInterval(() => P.beat(), 60000);
-    setInterval(() => P.poll(), 4000);
+    if (!P.timers) P.timers = [setInterval(() => P.beat(), 60000), setInterval(() => P.poll(), 4000)];
     P.go('access', 'first');
   },
 
@@ -760,10 +776,15 @@ P.screens = {
         <div class="set-div"></div>
         <a class="set-i" href="${PRIVACY_URL}" target="_blank" rel="noopener" style="text-decoration:none"><span class="t">Política de privacidade</span></a>
         <div class="set-i"><span class="grow"><span class="t">Versão</span><br><span class="s">${VERSION}</span></span></div>
+        ${deleteItem}
       </div></div>`,
     back: () => P.go('home'),
     mount: v => {
       P.on(v, '[data-add]', () => P.openCode('settings'));
+      mountDelete(P, v, 'Seu cadastro, os familiares ligados e os alertas são apagados do Sina.', () => {
+        P.guardians = []; P.alerts = []; P.listenerOn = false; P.batteryIgnored = false;
+        DEMO.protectedId = null; DEMO.inactiveSince = null;
+      });
       P.on(v, '[data-unlink]', (e, b) => {
         const g = P.guardians[+b.dataset.unlink];
         P.phone.dialog({
@@ -804,7 +825,7 @@ Object.assign(G, {
   people: [], alerts: [], seen: new Set(), first: true, nicknames: {}, filterPerson: null, onlyScams: true,
 
   onRegistered() {
-    setInterval(() => G.poll(), 4000);
+    if (!G.timers) G.timers = setInterval(() => G.poll(), 4000);
     G.go('pair', 'first');
   },
 
@@ -1017,9 +1038,13 @@ G.screens = {
         <div class="set-div"></div>
         <a class="set-i" href="${PRIVACY_URL}" target="_blank" rel="noopener" style="text-decoration:none"><span class="t">Política de privacidade</span></a>
         <div class="set-i"><span class="grow"><span class="t">Versão</span><br><span class="s">${VERSION}</span></span></div>
+        ${deleteItem}
       </div></div>${G.nav('settings')}`,
     mount: v => {
       G.mountNav(v);
+      mountDelete(G, v, 'Seu cadastro e as ligações com as pessoas que você protege são apagados do Sina.', () => {
+        G.people = []; G.alerts = []; G.seen = new Set(); G.first = true; G.nicknames = {}; G.filterPerson = null;
+      });
       G.on(v, '[data-notif]', () => { G.notificationsOn = !G.notificationsOn; G.go('settings'); });
       G.on(v, '[data-rename]', (e, b) => {
         const p = G.people[+b.dataset.rename];

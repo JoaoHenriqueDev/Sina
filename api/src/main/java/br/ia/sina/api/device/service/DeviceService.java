@@ -47,6 +47,10 @@ public class DeviceService {
         repository.save(device);
     }
 
+    public void delete(Device device) {
+        repository.deleteById(device.getId());
+    }
+
     public void heartbeat(Device device, boolean listenerEnabled) {
         if (!listenerEnabled) {
             return;
