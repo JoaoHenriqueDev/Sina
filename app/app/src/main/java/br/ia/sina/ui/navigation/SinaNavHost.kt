@@ -60,6 +60,9 @@ object Routes {
     fun guardianInactive(protectedId: String) = "guardian/inactive/$protectedId"
 }
 
+/** Rotas que outros apps e as notificações podem abrir; o resto do app só é navegável por dentro. */
+private val externalRoute = Regex("""(elder/alert|guardian/alert|guardian/inactive)/[A-Za-z0-9-]{1,64}""")
+
 private fun NavHostController.replaceAll(route: String) = navigate(route) {
     popUpTo(graph.id) { inclusive = true }
     launchSingleTop = true
@@ -86,9 +89,9 @@ fun SinaNavHost(
     fun guardianStart(state: AppState): String = if (state.deviceToken == null) Routes.GUARDIAN_SIGNUP else Routes.GUARDIAN_HOME
 
     fun allowed(route: String, state: AppState): Boolean = when {
+        !externalRoute.matches(route) -> false
         route.startsWith("elder/") -> state.role == Role.PROTECTED && state.consentAccepted
-        route.startsWith("guardian/") -> state.role == Role.GUARDIAN && state.deviceToken != null
-        else -> false
+        else -> state.role == Role.GUARDIAN && state.deviceToken != null
     }
 
     fun openTab(tab: GuardianTab) {
@@ -107,7 +110,7 @@ fun SinaNavHost(
         val target = pendingRoute ?: return@LaunchedEffect
         val current = navController.currentDestination?.route ?: return@LaunchedEffect
         if (current == Routes.SPLASH) return@LaunchedEffect
-        if (allowed(target, prefs.current())) navController.navigate(target)
+        if (allowed(target, prefs.current())) runCatching { navController.navigate(target) }
         onRouteConsumed()
     }
 
@@ -125,7 +128,7 @@ fun SinaNavHost(
                     navController.replaceAll(start)
                     val target = pending
                     if (target != null) {
-                        if ((start == Routes.ELDER_HOME || start == Routes.GUARDIAN_HOME) && allowed(target, state)) navController.navigate(target)
+                        if ((start == Routes.ELDER_HOME || start == Routes.GUARDIAN_HOME) && allowed(target, state)) runCatching { navController.navigate(target) }
                         onRouteConsumed()
                     }
                 }

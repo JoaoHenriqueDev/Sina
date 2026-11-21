@@ -2,55 +2,53 @@ package br.ia.sina.api.pairing.service;
 
 import br.ia.sina.api.common.ApiException;
 import br.ia.sina.api.common.ErrorCode;
+import br.ia.sina.api.common.WindowLimiter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-// shortcut: contagem em memória zera ao reiniciar e não é compartilhada entre instâncias; mover para o banco se escalar horizontalmente
+/**
+ * Limita tentativas de resgate por dispositivo, por IP e no total: como cadastrar dispositivos é livre,
+ * só o limite global garante um teto de chutes contra o espaço de códigos.
+ */
 @Component
 public class PairingAttemptLimiter {
 
-    public static final int MAX_FAILURES = 5;
+    public static final int MAX_ATTEMPTS = 5;
     public static final Duration WINDOW = Duration.ofMinutes(10);
 
-    private record Window(Instant start, int failures) {
+    private final WindowLimiter perDevice;
+    private final WindowLimiter perIp;
+    private final WindowLimiter global;
+
+    @Autowired
+    public PairingAttemptLimiter(@Value("${sina.limits.pairing-attempts-per-ip:20}") int perIp,
+                                 @Value("${sina.limits.pairing-attempts-global:300}") int global) {
+        this(perIp, global, Clock.systemUTC());
     }
 
-    private final Map<UUID, Window> windows = new ConcurrentHashMap<>();
-    private final Clock clock;
-
-    public PairingAttemptLimiter() {
-        this(Clock.systemUTC());
+    PairingAttemptLimiter(int perIp, int global, Clock clock) {
+        this.perDevice = new WindowLimiter(MAX_ATTEMPTS, WINDOW, clock);
+        this.perIp = new WindowLimiter(perIp, WINDOW, clock);
+        this.global = new WindowLimiter(global, WINDOW, clock);
     }
 
-    PairingAttemptLimiter(Clock clock) {
-        this.clock = clock;
-    }
-
-    public void check(UUID deviceId) {
-        Window w = windows.get(deviceId);
-        if (w == null) {
-            return;
-        }
-        if (isExpired(w)) {
-            windows.remove(deviceId, w);
-        } else if (w.failures() >= MAX_FAILURES) {
+    public void acquire(UUID deviceId, String clientIp) {
+        boolean ok = perDevice.tryAcquire(deviceId.toString()) & perIp.tryAcquire(clientIp) & global.tryAcquire("all");
+        if (!ok) {
             throw new ApiException(ErrorCode.RATE_LIMITED, "Muitas tentativas, tente novamente mais tarde");
         }
     }
 
-    public void recordFailure(UUID deviceId) {
-        windows.compute(deviceId, (id, w) -> w == null || isExpired(w)
-                ? new Window(clock.instant(), 1)
-                : new Window(w.start(), w.failures() + 1));
-    }
-
-    private boolean isExpired(Window w) {
-        return !clock.instant().isBefore(w.start().plus(WINDOW));
+    @Scheduled(fixedDelayString = "PT5M", initialDelayString = "PT5M")
+    public void evictExpired() {
+        perDevice.evictExpired();
+        perIp.evictExpired();
+        global.evictExpired();
     }
 }

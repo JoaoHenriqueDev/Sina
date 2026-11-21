@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AnalysisService {
@@ -74,7 +75,7 @@ public class AnalysisService {
         limiter.acquire(device.getId());
         List<LocalSignal> signals = request.localSignals() == null ? List.of() : request.localSignals();
         String hash = textHash(request.text());
-        String cacheKey = cacheKey(request, signals);
+        String cacheKey = cacheKey(device.getId(), request, signals);
 
         Result result = cached(cacheKey)
                 .map(v -> new Result(v, Engine.CACHE, true))
@@ -132,6 +133,10 @@ public class AnalysisService {
     }
 
     private Result fresh(String hash, AnalyzeRequest request, List<LocalSignal> signals) {
+        if (!limiter.tryAcquireLlm()) {
+            log.warn("Teto diário global de chamadas ao LLM atingido, usando regras locais");
+            return new Result(LocalRules.evaluate(signals), Engine.RULES, LocalRules.hasRiskSignals(signals));
+        }
         LlmVerdict verdict;
         try {
             verdict = openAi.classify(request.source(), request.text(), signals, request.contextOrNull());
@@ -151,16 +156,16 @@ public class AnalysisService {
         return tokenService.hash("analysis:" + normalize(text));
     }
 
-    /** O veredito depende do contexto e da pista de remetente, então o cache também. */
-    private String cacheKey(AnalyzeRequest request, List<LocalSignal> signals) {
+    /**
+     * O cache é por dispositivo e inclui tudo o que vai para o modelo: um veredito obtido por um
+     * dispositivo não pode ser servido a outro, senão quem conhece o texto de um golpe consegue
+     * gravar "seguro" para todas as vítimas.
+     */
+    private String cacheKey(UUID deviceId, AnalyzeRequest request, List<LocalSignal> signals) {
         String context = request.contextOrNull();
-        String sender = signals.contains(LocalSignal.UNKNOWN_SENDER) ? "U"
-                : signals.contains(LocalSignal.SAVED_CONTACT) ? "S" : "";
-        if (context == null && sender.isEmpty()) {
-            return textHash(request.text());
-        }
-        return tokenService.hash("analysis:" + sender + "|" + (context == null ? "" : normalize(context)) + "|"
-                + normalize(request.text()));
+        String sig = signals.stream().distinct().sorted().map(Enum::name).collect(Collectors.joining(","));
+        return tokenService.hash("analysis:v2|" + deviceId + "|" + request.source() + "|" + sig + "|"
+                + (context == null ? "" : normalize(context)) + "|" + normalize(request.text()));
     }
 
     private static String normalize(String text) {

@@ -32,9 +32,9 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 
-private val sixDigits = Regex("""(?<!\d)(\d{3})\s?(\d{3})(?!\d)""")
+private val eightDigits = Regex("""(?<!\d)(\d{4})\s?(\d{4})(?!\d)""")
 
-fun extractPairingCode(raw: String?): String? = raw?.let { sixDigits.find(it) }?.let { it.groupValues[1] + it.groupValues[2] }
+fun extractPairingCode(raw: String?): String? = raw?.let { eightDigits.find(it) }?.let { it.groupValues[1] + it.groupValues[2] }
 
 @Composable
 fun QrScanner(onCode: (String) -> Unit, modifier: Modifier = Modifier) {

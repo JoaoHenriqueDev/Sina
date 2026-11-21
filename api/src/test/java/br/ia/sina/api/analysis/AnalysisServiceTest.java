@@ -56,7 +56,7 @@ class AnalysisServiceTest {
     private final GuardianNotifier notifier = mock(GuardianNotifier.class);
     private final ObjectMapper mapper = JsonMapper.builder().build();
     private final AnalysisService service = new AnalysisService(openAi, cacheRepository, alertRepository, notifier,
-            new TokenService(new SinaProperties("p".repeat(32))), new AnalysisRateLimiter(), mapper,
+            new TokenService(new SinaProperties("p".repeat(32))), new AnalysisRateLimiter(5000), mapper,
             new TransactionTemplate(mock(PlatformTransactionManager.class)));
 
     private final Device device = new Device();
@@ -158,7 +158,7 @@ class AnalysisServiceTest {
     void mesmoTextoComEspacosECaixaDiferentesGeraMesmoHash() {
         llmReturns(Verdict.SAFE, ScamType.NONE, 0.9);
         service.analyze(device, request(List.of()));
-        service.analyze(device, new AnalyzeRequest(Source.SMS, "  " + TEXT.toUpperCase() + "\n", List.of(), Instant.now()));
+        service.analyze(device, new AnalyzeRequest(Source.WHATSAPP, "  " + TEXT.toUpperCase() + "\n", List.of(), Instant.now()));
 
         ArgumentCaptor<String> hashes = ArgumentCaptor.forClass(String.class);
         verify(cacheRepository, times(2)).findById(hashes.capture());
@@ -276,6 +276,34 @@ class AnalysisServiceTest {
         verify(cacheRepository, times(3)).findById(keys.capture());
         assertThat(keys.getAllValues()).doesNotHaveDuplicates();
         verify(openAi).classify(any(), anyString(), anyList(), org.mockito.ArgumentMatchers.eq("meu celular caiu"));
+    }
+
+    @Test
+    void cacheNaoECompartilhadoEntreDispositivosNemEntreSinaisOuOrigem() {
+        llmReturns(Verdict.SAFE, ScamType.NONE, 0.9);
+        Device outro = new Device();
+        outro.setId(UUID.randomUUID());
+        service.analyze(device, request(List.of(LocalSignal.UNKNOWN_SENDER)));
+        service.analyze(outro, request(List.of(LocalSignal.UNKNOWN_SENDER)));
+        service.analyze(device, request(List.of(LocalSignal.UNKNOWN_SENDER, LocalSignal.PIX_REQUEST)));
+        service.analyze(device, new AnalyzeRequest(Source.SMS, TEXT, List.of(LocalSignal.UNKNOWN_SENDER), Instant.now()));
+        service.analyze(device, request(List.of(LocalSignal.PIX_REQUEST, LocalSignal.UNKNOWN_SENDER, LocalSignal.PIX_REQUEST)));
+
+        ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
+        verify(cacheRepository, times(5)).findById(keys.capture());
+        assertThat(keys.getAllValues().subList(0, 4)).doesNotHaveDuplicates();
+        assertThat(keys.getAllValues().get(4)).isEqualTo(keys.getAllValues().get(2));
+    }
+
+    @Test
+    void tetoGlobalDoLlmCaiParaRegrasLocais() {
+        AnalysisService limitado = new AnalysisService(openAi, cacheRepository, alertRepository, notifier,
+                new TokenService(new SinaProperties("p".repeat(32))), new AnalysisRateLimiter(1), mapper, new TransactionTemplate(mock(PlatformTransactionManager.class)));
+        llmReturns(Verdict.SAFE, ScamType.NONE, 0.9);
+        assertThat(limitado.analyze(device, request(List.of())).engine()).isEqualTo(Engine.LLM);
+        AnalyzeResponse segunda = limitado.analyze(device, new AnalyzeRequest(Source.SMS, "outro texto", List.of(LocalSignal.PIX_REQUEST), Instant.now()));
+        assertThat(segunda.engine()).isEqualTo(Engine.RULES);
+        verify(openAi, times(1)).classify(any(), anyString(), anyList(), any());
     }
 
     @Test

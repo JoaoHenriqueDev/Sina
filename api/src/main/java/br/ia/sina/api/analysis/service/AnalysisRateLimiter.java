@@ -2,6 +2,9 @@ package br.ia.sina.api.analysis.service;
 
 import br.ia.sina.api.common.ApiException;
 import br.ia.sina.api.common.ErrorCode;
+import br.ia.sina.api.common.WindowLimiter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -28,13 +31,25 @@ public class AnalysisRateLimiter {
     private final Map<UUID, Window> windows = new ConcurrentHashMap<>();
     private final Map<UUID, Window> daily = new ConcurrentHashMap<>();
     private final Clock clock;
+    /** Teto global: cadastrar dispositivos é livre, então só ele limita o custo total do LLM. */
+    private final WindowLimiter llmDaily;
 
-    public AnalysisRateLimiter() {
-        this(Clock.systemUTC());
+    @Autowired
+    public AnalysisRateLimiter(@Value("${sina.limits.llm-calls-per-day:5000}") int llmCallsPerDay) {
+        this(Clock.systemUTC(), llmCallsPerDay);
     }
 
     AnalysisRateLimiter(Clock clock) {
+        this(clock, Integer.MAX_VALUE);
+    }
+
+    AnalysisRateLimiter(Clock clock, int llmCallsPerDay) {
         this.clock = clock;
+        this.llmDaily = new WindowLimiter(llmCallsPerDay, DAILY_WINDOW, clock);
+    }
+
+    public boolean tryAcquireLlm() {
+        return llmDaily.tryAcquire("all");
     }
 
     public void acquire(UUID deviceId) {
@@ -57,6 +72,7 @@ public class AnalysisRateLimiter {
     public void evictExpired() {
         windows.values().removeIf(w -> isExpired(w, WINDOW));
         daily.values().removeIf(w -> isExpired(w, DAILY_WINDOW));
+        llmDaily.evictExpired();
     }
 
     int size() {

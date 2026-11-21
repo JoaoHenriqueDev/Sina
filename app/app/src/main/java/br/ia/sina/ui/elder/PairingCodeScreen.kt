@@ -129,7 +129,7 @@ fun PairingCodeScreen(onBack: () -> Unit, onPaired: () -> Unit) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Ou digite o código", style = SinaText.body(15, 21), color = SinaColors.TextSecondary)
                         Text(
-                            current.code.chunked(3).joinToString(" "),
+                            current.code.chunked(4).joinToString(" "),
                             style = SinaText.medium(44).copy(fontFamily = FontFamily.Monospace, letterSpacing = 6.sp),
                             color = if (expired) SinaColors.Neutral else SinaColors.TextPrimary,
                             modifier = Modifier.semantics { contentDescription = current.code.toList().joinToString(" ") },

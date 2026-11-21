@@ -32,6 +32,8 @@ public class PairingService {
     static final Duration CODE_TTL = Duration.ofMinutes(10);
     public static final Duration INACTIVE_AFTER = Duration.ofMinutes(30);
     private static final int MAX_CODE_ATTEMPTS = 20;
+    public static final int CODE_SPACE = 100_000_000;
+    public static final int MAX_GUARDIANS = 10;
 
     private final SecureRandom random = new SecureRandom();
     private final PairingCodeRepository codeRepository;
@@ -53,29 +55,31 @@ public class PairingService {
         codeRepository.deleteExpiredOrActiveOf(protectedDevice.getId(), now);
         Instant expiresAt = now.plus(CODE_TTL);
         for (int i = 0; i < MAX_CODE_ATTEMPTS; i++) {
-            String code = "%06d".formatted(random.nextInt(1_000_000));
+            String code = "%08d".formatted(random.nextInt(CODE_SPACE));
             if (codeRepository.insertIfFree(code, protectedDevice.getId(), expiresAt) == 1) {
                 return new CodeResponse(code, expiresAt);
             }
         }
-        throw new IllegalStateException("Não foi possível gerar um código de pareamento livre");
+        throw new ApiException(ErrorCode.PAIRING_UNAVAILABLE, "Não foi possível gerar um código agora, tente novamente em instantes");
     }
 
     @Transactional
-    public PairingItem redeem(Device guardian, String code) {
-        limiter.check(guardian.getId());
+    public PairingItem redeem(Device guardian, String code, String clientIp) {
+        limiter.acquire(guardian.getId(), clientIp);
         Instant now = Instant.now();
+        // Código vencido responde igual a inexistente para não revelar que ele existiu.
         PairingCode pairingCode = codeRepository.findByCodeAndUsedAtIsNull(code)
-                .orElseThrow(() -> failure(guardian, ErrorCode.PAIRING_CODE_NOT_FOUND, "Código não encontrado"));
-        if (!pairingCode.getExpiresAt().isAfter(now)) {
-            throw failure(guardian, ErrorCode.PAIRING_CODE_EXPIRED, "Código expirado");
-        }
+                .filter(c -> c.getExpiresAt().isAfter(now))
+                .orElseThrow(PairingService::notFound);
         UUID protectedId = pairingCode.getProtectedId();
         if (pairingRepository.existsByProtectedIdAndGuardianId(protectedId, guardian.getId())) {
             throw new ApiException(ErrorCode.ALREADY_PAIRED, "Dispositivos já pareados");
         }
+        if (pairingRepository.countByProtectedId(protectedId) >= MAX_GUARDIANS) {
+            throw new ApiException(ErrorCode.TOO_MANY_GUARDIANS, "Esta pessoa já tem o máximo de familiares ligados");
+        }
         if (codeRepository.markUsed(pairingCode.getId(), now) == 0) {
-            throw failure(guardian, ErrorCode.PAIRING_CODE_NOT_FOUND, "Código não encontrado");
+            throw notFound();
         }
         Pairing pairing = pairingRepository.save(new Pairing(protectedId, guardian.getId()));
         Device protectedDevice = deviceRepository.findById(protectedId).orElseThrow();
@@ -105,9 +109,8 @@ public class PairingService {
         pairingRepository.delete(pairing);
     }
 
-    private ApiException failure(Device guardian, ErrorCode code, String message) {
-        limiter.recordFailure(guardian.getId());
-        return new ApiException(code, message);
+    private static ApiException notFound() {
+        return new ApiException(ErrorCode.PAIRING_CODE_NOT_FOUND, "Código não encontrado");
     }
 
     private static PeerDevice protectedPeer(Device d, Instant now) {

@@ -9,6 +9,7 @@ import br.ia.sina.api.device.dto.DeviceDtos.RegisterResponse;
 import br.ia.sina.api.device.role.DeviceRole;
 import br.ia.sina.api.device.role.RequiresRole;
 import br.ia.sina.api.device.service.DeviceService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,8 +32,8 @@ public class DeviceController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
-        return service.register(request);
+    RegisterResponse register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        return service.register(request, http.getRemoteAddr());
     }
 
     @PutMapping("/me/fcm-token")

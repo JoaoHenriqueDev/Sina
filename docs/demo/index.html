@@ -192,7 +192,7 @@ button.set-i:hover{background:rgba(0,0,0,.03)}
   </header>
   <ol class="steps">
     <li><b>1. Configure os dois celulares</b>Siga as telas de boas-vindas, aceite a privacidade e confira o cadastro em cada celular.</li>
-    <li><b>2. Ligue o familiar</b>Na pessoa protegida, toque em Ligar familiar. No familiar, digite o código de 6 números.</li>
+    <li><b>2. Ligue o familiar</b>Na pessoa protegida, toque em Ligar familiar. No familiar, digite o código de 8 números.</li>
     <li><b>3. Simule um golpe</b>Toque em Simular golpe e veja o aviso nos dois celulares.</li>
   </ol>
   <div class="tabs" role="tablist">
@@ -740,7 +740,7 @@ P.screens = {
       html: `${topbar('Ligar familiar')}<div class="hero" style="padding-top:2px"><p>No celular do seu familiar, abra o Sina, toque em <b>Proteger um familiar</b> e aponte a câmera para o código.</p></div>
         <div class="sheet" style="gap:10px">${qr ? `<div class="qr" role="img" aria-label="QR code do código">${qr}</div>` : ''}
           <div style="text-align:center;font-size:14.5px;color:var(--muted);margin-top:6px">Ou digite o código</div>
-          <div class="codebox" aria-label="Código ${esc(c.code.split('').join(' '))}">${esc(c.code.slice(0, 3))}&nbsp;${esc(c.code.slice(3))}</div>
+          <div class="codebox" aria-label="Código ${esc(c.code.split('').join(' '))}">${esc(c.code.slice(0, 4))}&nbsp;${esc(c.code.slice(4))}</div>
           <span class="pill" id="expire" style="align-self:center;background:var(--orange-light);color:var(--text)"></span>
           <span class="grow"></span>
           <button class="btn outline" data-new>Gerar novo código</button></div>`,
@@ -882,8 +882,8 @@ G.screens = {
     html: `${mode === 'first' ? '<div style="height:60px"></div>' : topbar('Escanear código')}
       <div class="hero" style="padding-top:0;text-align:center"><p>No celular da pessoa protegida, toque em <b>Ligar familiar</b> e aponte a câmera para o código.</p></div>
       <div class="camera"><svg viewBox="0 0 220 220" aria-hidden="true" fill="none" stroke="#FF7A1A" stroke-width="4" stroke-linecap="round"><path d="M20 56V36a16 16 0 0 1 16-16h20M164 20h20a16 16 0 0 1 16 16v20M200 164v20a16 16 0 0 1-16 16h-20M56 200H36a16 16 0 0 1-16-16v-20"/></svg>A câmera não funciona na demonstração. Digite o código abaixo.</div>
-      <div class="sheet" style="flex:0 0 auto;gap:12px;padding:24px 20px 18px"><div style="font-size:17px;font-weight:500;padding:0 4px">Ou digite o código de 6 números</div>
-        ${field('g-code', 'Código', '', '', 'text', 'inputmode="numeric" maxlength="6" class="code" placeholder="••••••"')}
+      <div class="sheet" style="flex:0 0 auto;gap:12px;padding:24px 20px 18px"><div style="font-size:17px;font-weight:500;padding:0 4px">Ou digite o código de 8 números</div>
+        ${field('g-code', 'Código', '', '', 'text', 'inputmode="numeric" maxlength="8" class="code" placeholder="••••••••"')}
         <div class="err" aria-live="polite"></div>
         <button class="btn" data-pair>Ligar</button></div>`,
     back: () => G.go('home'),
@@ -894,7 +894,7 @@ G.screens = {
       G.on(v, '[data-pair]', async (e, b) => {
         const err = v.querySelector('.err');
         const code = input.value;
-        if (code.length !== 6) { err.textContent = 'O código tem 6 números.'; return; }
+        if (code.length !== 8) { err.textContent = 'O código tem 8 números.'; return; }
         b.disabled = true; b.innerHTML = '<span class="spinner"></span>Ligando…';
         try {
           const r = await api(G.token, 'POST', '/v1/pairings', {code});
@@ -912,9 +912,9 @@ G.screens = {
         } catch (x) {
           b.disabled = false; b.textContent = 'Ligar';
           err.textContent = {
-            PAIRING_CODE_EXPIRED: 'Código expirado. Gere um novo no celular da pessoa protegida.',
-            PAIRING_CODE_NOT_FOUND: 'Código não encontrado. Confira os 6 números.',
-            VALIDATION_ERROR: 'Código não encontrado. Confira os 6 números.',
+            TOO_MANY_GUARDIANS: 'Esta pessoa já tem o máximo de familiares ligados.',
+            PAIRING_CODE_NOT_FOUND: 'Código não encontrado. Confira os 8 números.',
+            VALIDATION_ERROR: 'Código não encontrado. Confira os 8 números.',
             ALREADY_PAIRED: 'Vocês já estão ligados.',
             RATE_LIMITED: 'Muitas tentativas. Espere um pouco e tente de novo.',
           }[x.code] || (x.code === 'NETWORK' ? x.message : 'Não foi possível ligar. Tente de novo.');

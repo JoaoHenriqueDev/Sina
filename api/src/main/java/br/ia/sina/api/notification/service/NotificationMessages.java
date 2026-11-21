@@ -53,7 +53,8 @@ public final class NotificationMessages {
         String category = category(n.scamType());
         String channel = n.source() == Source.WHATSAPP ? "WhatsApp" : "SMS";
         String when = DATE_TIME.format(n.createdAt());
-        String subject = "Alerta Sina: possível golpe contra " + p.plain();
+        // Assunto fixo: o nome vem do cadastro e não deve controlar a primeira linha do e-mail.
+        String subject = "Alerta Sina: possível golpe contra a pessoa protegida";
 
         String text = """
                 O Sina identificou uma mensagem de golpe recebida %s pelo %s em %s.
@@ -84,7 +85,7 @@ public final class NotificationMessages {
     public static EmailContent inactiveEmail(String protectedName, Instant lastSeenAt) {
         Person p = Person.from(protectedName);
         String when = DATE_TIME.format(lastSeenAt);
-        String subject = "Sina: proteção parada no celular " + p.of();
+        String subject = "Sina: proteção parada no celular da pessoa protegida";
 
         String text = """
                 O celular %s não envia sinal ao Sina desde %s.

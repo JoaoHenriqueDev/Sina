@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -122,8 +123,8 @@ class NotificationFlowTest {
                 .containsKey("createdAt");
 
         ArgumentCaptor<EmailContent> mail = ArgumentCaptor.forClass(EmailContent.class);
-        verify(email).send(anyString(), eq("familia@teste.com.br"), mail.capture());
-        assertThat(mail.getValue().subject()).isEqualTo("Alerta Sina: possível golpe contra Dona Rosa");
+        verify(email).send(startsWith("alert-"), eq("familia@teste.com.br"), mail.capture());
+        assertThat(mail.getValue().subject()).isEqualTo("Alerta Sina: possível golpe contra a pessoa protegida");
         assertThat(mail.getValue().html())
                 .contains("Falso parente")
                 .contains("&lt;b&gt;urgente&lt;/b&gt;")
@@ -207,6 +208,36 @@ class NotificationFlowTest {
     }
 
     @Test
+    void emailSoViraCanalDepoisDaConfirmacaoPeloLink() throws Exception {
+        Device idoso = register("{\"role\":\"PROTECTED\",\"displayName\":\"Pessoa\",\"email\":\"pessoa@teste.com.br\",\"phone\":\"11987654321\"}");
+        Device familiar = register("{\"role\":\"GUARDIAN\",\"fcmToken\":\"tok-1\",\"email\":\"familia@teste.com.br\",\"displayName\":\"Ana\",\"phone\":\"11987654321\"}");
+        ArgumentCaptor<EmailContent> link = ArgumentCaptor.forClass(EmailContent.class);
+        verify(email).send(startsWith("verify-"), eq("familia@teste.com.br"), link.capture());
+        assertThat(link.getValue().subject()).isEqualTo("Sina: confirme seu e-mail");
+        jdbc.update("update device set email_verified_at = null where id = ?", familiar.id());
+        String code = JsonPath.read(mvc.perform(post("/v1/pairing-codes").header("Authorization", "Bearer " + idoso.token()))
+                .andReturn().getResponse().getContentAsString(), "$.code");
+        mvc.perform(post("/v1/pairings").header("Authorization", "Bearer " + familiar.token())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"" + code + "\"}")).andExpect(status().isCreated());
+
+        String alertId = analyze(idoso);
+        assertThat(deliveryRepository.findByAlertIdOrderByCreatedAt(UUID.fromString(alertId)))
+                .extracting(AlertDelivery::getChannel).containsExactly(DeliveryChannel.PUSH);
+
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("token=([A-Za-z0-9_-]+)").matcher(link.getValue().text());
+        assertThat(m.find()).isTrue();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/email/confirmar").param("token", m.group(1)))
+                .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("select email_verified_at from device where id = ?", java.sql.Timestamp.class, familiar.id())).isNull();
+        mvc.perform(post("/email/confirmar").contentType(MediaType.APPLICATION_FORM_URLENCODED).param("token", m.group(1)))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("E-mail confirmado")));
+        mvc.perform(post("/email/confirmar").contentType(MediaType.APPLICATION_FORM_URLENCODED).param("token", m.group(1)))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Link inválido")));
+        assertThat(jdbc.queryForObject("select email_verified_at from device where id = ?", java.sql.Timestamp.class, familiar.id())).isNotNull();
+    }
+
+    @Test
     void canaisDesligadosNaoGeramEntrega() throws Exception {
         when(push.enabled()).thenReturn(false);
         when(email.enabled()).thenReturn(false);
@@ -237,6 +268,7 @@ class NotificationFlowTest {
         mvc.perform(post("/v1/pairings").header("Authorization", "Bearer " + familiar.token())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"" + code + "\"}"))
                 .andExpect(status().is2xxSuccessful());
+        jdbc.update("update device set email_verified_at = now() where id = ?", familiar.id());
     }
 
     private String analyze(Device idoso) throws Exception {

@@ -88,8 +88,8 @@ fun GuardianPairScreen(onBack: (() -> Unit)?, onPaired: () -> Unit) {
             } catch (e: Exception) {
                 val api = e.toApiError() ?: throw e
                 error = when (api.code) {
-                    "PAIRING_CODE_EXPIRED" -> "Código expirado. Gere um novo no celular da pessoa protegida."
-                    "PAIRING_CODE_NOT_FOUND", "VALIDATION_ERROR" -> "Código não encontrado. Confira os 6 números."
+                    "TOO_MANY_GUARDIANS" -> "Esta pessoa já tem o máximo de familiares ligados."
+                    "PAIRING_CODE_NOT_FOUND", "VALIDATION_ERROR" -> "Código não encontrado. Confira os 8 números."
                     "ALREADY_PAIRED" -> "Vocês já estão ligados."
                     "RATE_LIMITED" -> "Muitas tentativas. Espere um pouco e tente de novo."
                     else -> "Não foi possível ligar. Tente de novo."
@@ -136,10 +136,10 @@ fun GuardianPairScreen(onBack: (() -> Unit)?, onPaired: () -> Unit) {
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("Ou digite o código de 6 números", style = SinaText.medium(17), color = SinaColors.TextPrimary)
+            Text("Ou digite o código de 8 números", style = SinaText.medium(17), color = SinaColors.TextPrimary)
             OutlinedTextField(
                 value = code,
-                onValueChange = { v -> code = v.filter(Char::isDigit).take(6); error = null },
+                onValueChange = { v -> code = v.filter(Char::isDigit).take(8); error = null },
                 label = { Text("Código") },
                 isError = error != null,
                 supportingText = error?.let { { Text(it) } },
@@ -153,7 +153,7 @@ fun GuardianPairScreen(onBack: (() -> Unit)?, onPaired: () -> Unit) {
             )
             DarkButton(
                 if (submitting) "Ligando…" else "Ligar",
-                enabled = code.length == 6 && !submitting,
+                enabled = code.length == 8 && !submitting,
                 onClick = { redeem(code) },
                 modifier = Modifier.fillMaxWidth(),
             )

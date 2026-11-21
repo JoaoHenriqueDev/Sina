@@ -17,6 +17,8 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     Optional<Device> findByTokenHash(String tokenHash);
 
+    Optional<Device> findByEmailTokenHash(String emailTokenHash);
+
     List<Device> findByRoleAndLastSeenAtBeforeAndInactiveNotifiedAtIsNull(DeviceRole role, Instant limit);
 
     @Transactional
