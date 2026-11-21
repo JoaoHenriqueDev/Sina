@@ -14,4 +14,6 @@ public interface PairingRepository extends JpaRepository<Pairing, UUID> {
     List<Pairing> findByGuardianIdOrderByCreatedAt(UUID guardianId);
 
     List<Pairing> findByProtectedIdOrderByCreatedAt(UUID protectedId);
+
+    long countByProtectedId(UUID protectedId);
 }

@@ -9,6 +9,7 @@ import br.ia.sina.api.device.model.Device;
 import br.ia.sina.api.device.repository.DeviceRepository;
 import br.ia.sina.api.device.role.DeviceRole;
 import br.ia.sina.api.device.service.DeviceService;
+import br.ia.sina.api.device.service.EmailVerificationService;
 import br.ia.sina.api.device.service.TokenService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -27,7 +28,8 @@ class DeviceServiceTest {
 
     private final DeviceRepository repository = mock(DeviceRepository.class);
     private final TokenService tokenService = new TokenService(new SinaProperties("p".repeat(32)));
-    private final DeviceService service = new DeviceService(repository, tokenService);
+    private final EmailVerificationService emailVerification = mock(EmailVerificationService.class);
+    private final DeviceService service = new DeviceService(repository, tokenService, emailVerification, 3);
 
     @Test
     void registroGravaSoOHashDoToken() {
@@ -38,7 +40,7 @@ class DeviceServiceTest {
             return d;
         });
 
-        RegisterResponse response = service.register(new RegisterRequest(DeviceRole.GUARDIAN, "fcm", "Ana", "ana@exemplo.com", "(11) 98765-4321"));
+        RegisterResponse response = service.register(new RegisterRequest(DeviceRole.GUARDIAN, "fcm", "Ana", "ana@exemplo.com", "(11) 98765-4321"), "1.1.1.1");
 
         ArgumentCaptor<Device> saved = ArgumentCaptor.forClass(Device.class);
         verify(repository).save(saved.capture());
@@ -49,8 +51,38 @@ class DeviceServiceTest {
     }
 
     @Test
+    void familiarRecebeLinkDeConfirmacaoEIdosoNao() {
+        when(repository.save(any())).thenAnswer(inv -> {
+            Device d = inv.getArgument(0);
+            d.setId(UUID.randomUUID());
+            return d;
+        });
+        when(emailVerification.prepare(any())).thenReturn("tok");
+        service.register(new RegisterRequest(DeviceRole.GUARDIAN, null, "Ana", "ana@teste.com.br", "11987654321"), "1.1.1.1");
+        service.register(new RegisterRequest(DeviceRole.PROTECTED, null, "Maria", "maria@teste.com.br", "11987654321"), "1.1.1.1");
+        verify(emailVerification).sendLink(any(), org.mockito.ArgumentMatchers.eq("ana@teste.com.br"), org.mockito.ArgumentMatchers.eq("tok"));
+        verify(emailVerification, org.mockito.Mockito.times(1)).prepare(any());
+    }
+
+    @Test
+    void cadastroLimitadoPorIp() {
+        when(repository.save(any())).thenAnswer(inv -> {
+            Device d = inv.getArgument(0);
+            d.setId(UUID.randomUUID());
+            return d;
+        });
+        RegisterRequest req = new RegisterRequest(DeviceRole.PROTECTED, null, "Maria", "maria@teste.com.br", "11987654321");
+        for (int i = 0; i < 3; i++) {
+            service.register(req, "9.9.9.9");
+        }
+        assertThatThrownBy(() -> service.register(req, "9.9.9.9"))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(ErrorCode.RATE_LIMITED));
+        service.register(req, "8.8.8.8");
+    }
+
+    @Test
     void telefoneSemDddEhRecusado() {
-        assertThatThrownBy(() -> service.register(new RegisterRequest(DeviceRole.PROTECTED, null, "Maria", "maria@teste.com.br", "98765-432")))
+        assertThatThrownBy(() -> service.register(new RegisterRequest(DeviceRole.PROTECTED, null, "Maria", "maria@teste.com.br", "98765-432"), "1.1.1.1"))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(ErrorCode.VALIDATION_ERROR));
         verify(repository, never()).save(any());
     }

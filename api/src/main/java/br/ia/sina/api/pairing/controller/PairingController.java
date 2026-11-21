@@ -9,6 +9,7 @@ import br.ia.sina.api.pairing.service.PairingService;
 import br.ia.sina.api.pairing.dto.PairingDtos.PairingItem;
 import br.ia.sina.api.pairing.dto.PairingDtos.PairingList;
 import br.ia.sina.api.pairing.dto.PairingDtos.RedeemRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,8 +43,8 @@ public class PairingController {
     @PostMapping("/pairings")
     @ResponseStatus(HttpStatus.CREATED)
     @RequiresRole(DeviceRole.GUARDIAN)
-    PairingItem redeem(@CurrentDevice Device device, @Valid @RequestBody RedeemRequest request) {
-        return service.redeem(device, request.code());
+    PairingItem redeem(@CurrentDevice Device device, @Valid @RequestBody RedeemRequest request, HttpServletRequest http) {
+        return service.redeem(device, request.code(), http.getRemoteAddr());
     }
 
     @GetMapping("/pairings")

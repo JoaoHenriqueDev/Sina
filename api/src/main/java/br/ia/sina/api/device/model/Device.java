@@ -50,6 +50,11 @@ public class Device {
 
     private Instant inactiveNotifiedAt;
 
+    private Instant emailVerifiedAt;
+
+    @Column(length = 64)
+    private String emailTokenHash;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

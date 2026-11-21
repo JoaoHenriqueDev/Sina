@@ -1,3 +1,7 @@
+server:
+  # Railway encaminha o IP real em X-Forwarded-For; os limites por IP dependem disso.
+  forward-headers-strategy: native
+
 spring:
   config:
     import: "optional:file:.env[.properties]"
@@ -28,3 +32,4 @@ firebase:
 sina:
   device-token-pepper: ${DEVICE_TOKEN_PEPPER:}
   cors-origins: ${CORS_ORIGINS:https://joaohenriquedev.github.io}
+  public-base-url: ${PUBLIC_BASE_URL:https://sinaapimobile.sina.ia.br}

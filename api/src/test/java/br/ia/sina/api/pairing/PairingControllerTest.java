@@ -38,7 +38,7 @@ class PairingControllerTest {
         String[] idoso = register("PROTECTED", "Dona Maria");
         String[] familiar = register("GUARDIAN", "João");
         String code = createCode(idoso[1]);
-        assertThat(code).matches("\\d{6}");
+        assertThat(code).matches("\\d{8}");
 
         String body = redeem(familiar[1], code).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.protected.deviceId").value(idoso[0]))
@@ -79,14 +79,14 @@ class PairingControllerTest {
     }
 
     @Test
-    void codigoExpiradoDa410() throws Exception {
+    void codigoExpiradoRespondeIgualAInexistente() throws Exception {
         String[] idoso = register("PROTECTED", null);
         String[] familiar = register("GUARDIAN", null);
         String code = createCode(idoso[1]);
         jdbc.update("update pairing_code set expires_at = now() - interval '1 second' where code = ?", code);
 
-        redeem(familiar[1], code).andExpect(status().isGone())
-                .andExpect(jsonPath("$.error.code").value("PAIRING_CODE_EXPIRED"));
+        redeem(familiar[1], code).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("PAIRING_CODE_NOT_FOUND"));
     }
 
     @Test
@@ -111,7 +111,7 @@ class PairingControllerTest {
         String[] familiar = register("GUARDIAN", null);
         mvc.perform(post("/v1/pairing-codes").header("Authorization", "Bearer " + familiar[1]))
                 .andExpect(status().isForbidden());
-        redeem(idoso[1], "123456").andExpect(status().isForbidden());
+        redeem(idoso[1], "12345678").andExpect(status().isForbidden());
     }
 
     @Test
@@ -129,11 +129,21 @@ class PairingControllerTest {
     @Test
     void cincoErrosBloqueiamComRateLimited() throws Exception {
         String[] familiar = register("GUARDIAN", null);
-        for (int i = 0; i < PairingAttemptLimiter.MAX_FAILURES; i++) {
-            redeem(familiar[1], "000000").andExpect(status().isNotFound());
+        for (int i = 0; i < PairingAttemptLimiter.MAX_ATTEMPTS; i++) {
+            redeem(familiar[1], "00000000").andExpect(status().isNotFound());
         }
-        redeem(familiar[1], "000000").andExpect(status().isTooManyRequests())
+        redeem(familiar[1], "00000000").andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.error.code").value("RATE_LIMITED"));
+    }
+
+    @Test
+    void limiteDeFamiliaresPorPessoaProtegida() throws Exception {
+        String[] idoso = register("PROTECTED", null);
+        for (int i = 0; i < br.ia.sina.api.pairing.service.PairingService.MAX_GUARDIANS; i++) {
+            redeem(register("GUARDIAN", null)[1], createCode(idoso[1])).andExpect(status().isCreated());
+        }
+        redeem(register("GUARDIAN", null)[1], createCode(idoso[1])).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("TOO_MANY_GUARDIANS"));
     }
 
     @Test

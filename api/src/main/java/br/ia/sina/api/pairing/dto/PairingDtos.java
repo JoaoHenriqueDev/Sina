@@ -22,7 +22,7 @@ public final class PairingDtos {
     public record CodeResponse(String code, Instant expiresAt) {
     }
 
-    public record RedeemRequest(@NotNull @Pattern(regexp = "\\d{6}") String code) {
+    public record RedeemRequest(@NotNull @Pattern(regexp = "\\d{8}") String code) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
