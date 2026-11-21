@@ -45,7 +45,7 @@ Há dois papéis, cada um no seu celular:
 A forma mais rápida é a demonstração no navegador: **https://demo.sina.ia.br**. Ela mostra os dois celulares lado a lado, com todas as telas do app, ligados à API real. Todos os dados são fictícios.
 
 1. Siga as telas de boas-vindas nos dois celulares e confirme o cadastro, que já vem preenchido.
-2. Na pessoa protegida, toque em **Ligar familiar**. No familiar, digite o código de 6 números.
+2. Na pessoa protegida, toque em **Ligar familiar**. No familiar, digite o código de 8 números.
 3. Toque em **Simular golpe**. A análise é feita de verdade pela IA, e o aviso aparece nos dois celulares.
 
 Também dá para testar uma mensagem normal, ver o histórico de alertas, desligar a proteção e ver o familiar ser avisado, ou excluir a conta.
@@ -87,6 +87,28 @@ Resposta:
 - `engine`: `LLM` (análise pela IA), `CACHE` (mesmo texto analisado nos últimos 7 dias) ou `RULES` (regras locais, usadas se a IA não responder).
 - O familiar só é avisado quando o veredito é golpe com certeza de pelo menos 0,8.
 
+## Qualidade da detecção
+
+Avaliamos a IA com 100 mensagens fictícias: 50 golpes dos nove tipos acima mais 2 tentativas de manipular a IA, 40 mensagens legítimas e 10 ambíguas. As mensagens legítimas incluem casos difíceis, como código de banco com aviso de "não compartilhe", Pix recebido, fatura e um filho alertando sobre o golpe do falso parente. As ambíguas são casos como consignado, vaquinha e aluguel com sinal. Cada mensagem é anonimizada exatamente como no app e enviada à API em produção.
+
+| Métrica | Resultado |
+| --- | --- |
+| Golpes detectados (golpe ou suspeita) | **50 de 50 (100%)** |
+| Golpes em que a família é avisada | 47 de 50 (94%) |
+| Mensagens legítimas marcadas por engano | **1 de 40 (2,5%)** |
+| Falsos alarmes para a família | **0 de 40** |
+| Tipo de golpe identificado corretamente | 44 de 45 (97,8%) |
+| Tentativas de manipular a IA ("ignore as instruções…") | 2 de 2 detectadas como golpe |
+| Tempo de resposta da IA (mediana / p95) | 2,4 s / 3,7 s |
+
+Os três golpes que não chegaram à família foram marcados como suspeita: o idoso recebe o aviso, mas a certeza ficou abaixo de 0,8. A única mensagem legítima marcada por engano foi um aviso de transferência realizada, que gerou só uma suspeita, sem avisar a família.
+
+O conjunto é pequeno e escrito pela equipe. Ele serve para comparar versões do prompt e mostrar o comportamento esperado; não é uma taxa de acerto medida no mundo real. O relatório completo, com a matriz de confusão e os erros, está em [`eval/RESULTADOS.md`](eval/RESULTADOS.md). Para repetir a avaliação:
+
+```bash
+python3 eval/avaliar.py --api http://localhost:8081
+```
+
 ## Arquitetura
 
 ```
@@ -118,6 +140,7 @@ sina/
 ├── docs/
 │   ├── demo/     demonstração no navegador
 │   └── img/      imagens deste README
+├── eval/         avaliação da IA com mensagens fictícias
 └── README.md
 ```
 
@@ -207,7 +230,7 @@ Autenticação por `Authorization: Bearer <deviceToken>`. A API guarda só o has
 | `PUT /v1/devices/me/fcm-token` | ambos | Atualiza o token de notificação |
 | `POST /v1/devices/me/heartbeat` | protegido | Sinal de vida do app |
 | `DELETE /v1/devices/me` | ambos | Exclui a conta, as ligações e os alertas |
-| `POST /v1/pairing-codes` | protegido | Gera o código de 6 números para ligar um familiar, válido por 10 minutos |
+| `POST /v1/pairing-codes` | protegido | Gera o código de 8 números para ligar um familiar, válido por 10 minutos |
 | `POST /v1/pairings` | familiar | Usa o código e cria a ligação |
 | `GET /v1/pairings` | ambos | Lista as ligações e o estado da proteção |
 | `DELETE /v1/pairings/{id}` | ambos | Desfaz a ligação |
