@@ -889,7 +889,7 @@ G.screens = {
     back: () => G.go('home'),
     mount: v => {
       const input = v.querySelector('#g-code');
-      input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); });
+      input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 8); });
       input.addEventListener('keydown', e => e.key === 'Enter' && v.querySelector('[data-pair]').click());
       G.on(v, '[data-pair]', async (e, b) => {
         const err = v.querySelector('.err');
